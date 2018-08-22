@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import re
+import time
 
 import spotipy
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -13,6 +14,7 @@ from googleapiclient.discovery import build
 from gtts import gTTS
 from spotipy.oauth2 import SpotifyClientCredentials
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+import telegram
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -33,15 +35,17 @@ API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
 
-all_users = []
-with open('users.txt') as file:
-    all_users += [line.rstrip('\n') for line in file]
+all_users = {}
+with open('usernames.json') as file:
+    #all_users += [line.rstrip('\n') for line in file]
+    all_users.update(json.load(file))
 all_ids = {}
-with open('users.json') as file:
+with open('userids.json') as file:
     all_ids.update(json.load(file))
 not_pidors = set()
 pidor_active = False
 pidor_user = None
+pidor_time = None
 jobs = None
 
 
@@ -56,7 +60,7 @@ def create_spotify_service():
     return spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 
-#YOUTUBE = create_youtube_service()
+YOUTUBE = create_youtube_service()
 SPOTIFY = create_spotify_service()
 
 
@@ -140,6 +144,7 @@ def echo(bot, update):
     global not_pidors
     global pidor_active
     global pidor_user
+    global pidor_time
 
     bot.latest_update = datetime.datetime.now()
     entities = update.message.parse_entities().values()
@@ -163,20 +168,30 @@ def echo(bot, update):
         #bot.send_audio(chat_id=update.message.chat_id, audio=open('speech.mp3', 'rb'))
         bot.send_voice(chat_id=update.message.chat_id, voice=open('speech.mp3', 'rb'))
 
+    if '#сасай' in entities:
+        who = update.message.text[7:]
+        bot.send_message(chat_id=update.message.chat_id, text='%s наклоняется и делает нежный сасай %s' %
+                (who, update.message.from_user.name))
+
     if '#таймер' in entities:
         amount = float(update.message.text[8:])
 
         if amount < 2. or amount > 20.:
             update.message.reply_text('только пидоры ставят такие таймеры')
-            #return
+            return
 
         if pidor_active:
             update.message.reply_text(pidor_user + ' уже запустил таймер')
             return
 
+        if pidor_time is not None and time.time() - pidor_time < 60 * 60:
+            update.message.reply_text('заебали со своими таймерами')
+            return
+
         update.message.reply_text('bomb has been planted')
         pidor_active = True
         pidor_user = get_name_or_id(update.message.from_user)
+        pidor_time = time.time()
         not_pidors = set()
         not_pidors.add(pidor_user)
         jobs.run_once(pidors_reminder_callback, 60 * (amount - 1), context=update.message.chat_id)
@@ -203,13 +218,15 @@ def pidors_callback(bot, job):
     global pidor_active
 
     text = 'А вот и список пидарёх: '
-    for user in all_users:
-        if user not in not_pidors:
-            text += '@' + user + ', '
+    for username in all_users:
+        if username not in not_pidors:
+            text += '[@%s](@%s), ' % (username, all_users[username])
+            #text += '[%s](tg://user?id=%s), ' % (all_users[username], username)
+            #text += '[%s](mention:@%s), ' % (all_users[username], username)
 
     for user_id in all_ids:
         if user_id not in not_pidors:
-            text += all_ids[user_id] + ', '
+            text += '[%s](tg://user?id=%s), ' % (all_ids[user_id], user_id)
             try:
                 #bot.send_message(chat_id=str(user_id), text='Гони юзернейм, пидор')
                 pass
@@ -217,7 +234,9 @@ def pidors_callback(bot, job):
                 pass
 
     pidor_active = False
-    bot.send_message(chat_id=job.context, text=text[:-2])
+    print(text[:-2])
+    bot.send_message(chat_id=job.context, text=text[:-2],
+            parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def error(bot, update, error):
