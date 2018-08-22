@@ -35,7 +35,7 @@ API_VERSION = 'v3'
 
 all_users = []
 with open('users.txt') as file:
-    all_users += ['@' + line.rstrip('\n') for line in file]
+    all_users += [line.rstrip('\n') for line in file]
 all_ids = {}
 with open('users.json') as file:
     all_ids.update(json.load(file))
@@ -56,7 +56,7 @@ def create_spotify_service():
     return spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 
-YOUTUBE = create_youtube_service()
+#YOUTUBE = create_youtube_service()
 SPOTIFY = create_spotify_service()
 
 
@@ -121,6 +121,13 @@ def add_to_playlist(url):
     ).execute()
 
 
+def get_name_or_id(user):
+    result = user.username
+    if result is None:
+        result = str(user.id)
+    return result
+
+
 # bot api
 
 def start(bot, update):
@@ -169,7 +176,7 @@ def echo(bot, update):
 
         update.message.reply_text('bomb has been planted')
         pidor_active = True
-        pidor_user = update.message.from_user.name
+        pidor_user = get_name_or_id(update.message.from_user)
         not_pidors = set()
         not_pidors.add(pidor_user)
         jobs.run_once(pidors_reminder_callback, 60 * (amount - 1), context=update.message.chat_id)
@@ -178,10 +185,14 @@ def echo(bot, update):
     if '#айди' in entities:
         update.message.reply_text(update.message.from_user.id)
 
-    if 'пидор' in update.message.text.lower() or 'пидр' in update.message.text.lower() or 'пiдор' in update.message.text.lower():
-        not_pidors.add(update.message.from_user.name)
-        #not_pidors.add(update.message.from_user.id)
-        print(update.message.from_user.name + ' теперь не пидор')
+    if pidor_active:
+        text = update.message.text.lower()
+        for pidor_str in ['пидор', 'пидар', 'пидр', 'пидорас',
+                'підор', 'підар', 'підр', 'підорас', 'підерас']:
+            if pidor_str in text:
+                not_pidors.add(get_name_or_id(update.message.from_user))
+                print(get_name_or_id(update.message.from_user) + ' теперь не пидор')
+                return
 
 
 def pidors_reminder_callback(bot, job):
@@ -194,8 +205,8 @@ def pidors_callback(bot, job):
     text = 'А вот и список пидарёх: '
     for user in all_users:
         if user not in not_pidors:
-            text += user + ', '
-            
+            text += '@' + user + ', '
+
     for user_id in all_ids:
         if user_id not in not_pidors:
             text += all_ids[user_id] + ', '
