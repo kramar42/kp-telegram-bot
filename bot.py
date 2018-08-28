@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import time
+import random
 
 import spotipy
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -27,26 +28,17 @@ SPOTIFY_SECRET = os.environ['SPOTIFY_SECRET']
 # youtube api
 PLAYLIST_ID = os.environ['PLAYLIST_ID']
 BOT_TOKEN = os.environ['BOT_TOKEN']
-#DEVELOPER_KEY = ''
 
 CLIENT_SECRETS_FILE = 'client_secret.json'
 SCOPES = ['https://www.googleapis.com/auth/youtube']
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
+WAIT_AMOUNT = 60 * 60
 
-all_users = {}
-with open('usernames.json') as file:
-    #all_users += [line.rstrip('\n') for line in file]
-    all_users.update(json.load(file))
 all_ids = {}
 with open('userids.json') as file:
     all_ids.update(json.load(file))
-not_pidors = set()
-pidor_active = False
-pidor_user = None
-pidor_time = None
-jobs = None
 
 
 def create_youtube_service():
@@ -77,7 +69,6 @@ def spotify_query(s):
 
 
 def youtube_search(q):
-    #youtube = build(API_SERVICE_NAME, API_VERSION, developerKey=DEVELOPER_KEY)
     search_response = YOUTUBE.search().list(q=q, part='id,snippet', maxResults=1, type='video').execute()
 
     if search_response.get('items', []):
@@ -137,16 +128,12 @@ def get_name_or_id(user):
 def start(bot, update):
     update.message.reply_text('Здаровки')
 
+
 def help(bot, update):
     update.message.reply_text('RTFM')
 
-def echo(bot, update):
-    global not_pidors
-    global pidor_active
-    global pidor_user
-    global pidor_time
 
-    bot.latest_update = datetime.datetime.now()
+def echo(bot, update, chat_data):
     entities = update.message.parse_entities().values()
     if '#нарубите' in entities:
         urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', update.message.text)
@@ -157,86 +144,87 @@ def echo(bot, update):
                 url = re.search('watch?.*v=(.{11}).*', url).group(1)
 
             add_to_playlist(url)
-            #update.message.reply_text('added video: ' + url)
         if len(urls) == 0:
             bot.send_message(update.message.chat_id, 'https://www.youtube.com/playlist?list=' + PLAYLIST_ID, disable_web_page_preview=True)
 
-    if '#скажи' in entities:
-        text = update.message.text[7:]
-        tts = gTTS(text=text, lang='ru')
-        tts.save("speech.mp3")
-        #bot.send_audio(chat_id=update.message.chat_id, audio=open('speech.mp3', 'rb'))
-        bot.send_voice(chat_id=update.message.chat_id, voice=open('speech.mp3', 'rb'))
-
-    if '#сасай' in entities:
-        who = update.message.text[7:]
-        bot.send_message(chat_id=update.message.chat_id, text='%s наклоняется и делает нежный сасай %s' %
-                (who, update.message.from_user.name))
-
-    if '#таймер' in entities:
-        amount = float(update.message.text[8:])
-
-        if amount < 2. or amount > 20.:
-            update.message.reply_text('только пидоры ставят такие таймеры')
-            return
-
-        if pidor_active:
-            update.message.reply_text(pidor_user + ' уже запустил таймер')
-            return
-
-        if pidor_time is not None and time.time() - pidor_time < 60 * 60:
-            update.message.reply_text('заебали со своими таймерами')
-            return
-
-        update.message.reply_text('bomb has been planted')
-        pidor_active = True
-        pidor_user = get_name_or_id(update.message.from_user)
-        pidor_time = time.time()
-        not_pidors = set()
-        not_pidors.add(pidor_user)
-        jobs.run_once(pidors_reminder_callback, 60 * (amount - 1), context=update.message.chat_id)
-        jobs.run_once(pidors_callback, 60 * amount, context=update.message.chat_id)
-
-    if '#айди' in entities:
-        update.message.reply_text(update.message.from_user.id)
-
-    if pidor_active:
+    if 'pidor_active' in chat_data:
         text = update.message.text.lower()
         for pidor_str in ['пидор', 'пидар', 'пидр', 'пидорас',
                 'підор', 'підар', 'підр', 'підорас', 'підерас']:
             if pidor_str in text:
-                not_pidors.add(get_name_or_id(update.message.from_user))
-                print(get_name_or_id(update.message.from_user) + ' теперь не пидор')
+                # FIX
+                chat_data['not_pidors'].add(str(update.message.from_user.id))
                 return
 
 
 def pidors_reminder_callback(bot, job):
-    bot.send_message(chat_id=job.context, text='Осталась минутка, детишки')
+    bot.send_message(chat_id=job.context['chat_id'], text='Осталась минутка, детишки')
+
+
+def pidors_reminder_last_callback(bot, job):
+    bot.send_message(chat_id=job.context['chat_id'], text='10 сек и Вы пидоры, господа: ' + pidors_list_text(),
+                     parse_mode=telegram.ParseMode.MARKDOWN)
+
+
+def pidors_list_text(not_pidors):
+    names = ['[%s](tg://user?id=%s)' % (all_ids[id], id) for id in all_ids.keys() if id not in not_pidors]
+    random.shuffle(names)
+    return ', '.join(names)
 
 
 def pidors_callback(bot, job):
-    global pidor_active
+    text = 'А вот и список пидарёх: ' + pidors_list_text(job.context['not_pidors'])
+    del job.context['pidor_active']
+    bot.send_message(chat_id=job.context['chat_id'], text=text,
+                     parse_mode=telegram.ParseMode.MARKDOWN)
 
-    text = 'А вот и список пидарёх: '
-    for username in all_users:
-        if username not in not_pidors:
-            text += '[@%s](@%s), ' % (username, all_users[username])
-            #text += '[%s](tg://user?id=%s), ' % (all_users[username], username)
-            #text += '[%s](mention:@%s), ' % (all_users[username], username)
 
-    for user_id in all_ids:
-        if user_id not in not_pidors:
-            text += '[%s](tg://user?id=%s), ' % (all_ids[user_id], user_id)
-            try:
-                #bot.send_message(chat_id=str(user_id), text='Гони юзернейм, пидор')
-                pass
-            except Exception:
-                pass
+def timer(bot, update, args, job_queue, chat_data):
+    if len(args) == 0:
+        args = ['']
+    try:
+        amount = float(args[0])
+    except (IndexError, ValueError):
+        update.message.reply_text('/timer <float: minutes>')
+        return
 
-    pidor_active = False
-    print(text[:-2])
-    bot.send_message(chat_id=job.context, text=text[:-2],
-            parse_mode=telegram.ParseMode.MARKDOWN)
+    if amount < 5. or amount > 30.:
+        update.message.reply_text('Только пидоры ставят такие таймеры')
+        return
+    if 'pidor_active' in chat_data:
+        update.message.reply_text('% уже запустил таймер' % all_ids[chat_data['pidor_user']])
+        return
+    if 'pidor_time' in chat_data and time.time() - chat_data['pidor_time'] < WAIT_AMOUNT:
+        update.message.reply_text('Заебали со своими таймерами')
+        return
+
+    chat_id = update.message.chat_id
+    chat_data['pidor_active'] = True
+    chat_data['pidor_user'] = update.message.from_user.id
+    chat_data['pidor_time'] = time.time()
+    chat_data['not_pidors'] = set()
+    # FIX ids from json file are parsed as strings
+    chat_data['not_pidors'].add(str(update.message.from_user.id))
+    chat_data['chat_id'] = chat_id
+    job_queue.run_once(pidors_reminder_callback, 60 * (amount - 1), context=chat_data)
+    job_queue.run_once(pidors_callback, 60 * amount, context=chat_data)
+    update.message.reply_text('Bomb has been planted')
+
+
+def say(bot, update, args):
+    text = ' '.join(args)
+    # TODO guess english text?
+    tts = gTTS(text=text, lang='ru')
+    # TODO make callback methods async & save speech to temp file with random name
+    tts.save('speech.mp3')
+    with open('speech.mp3', 'rb') as speech:
+        bot.send_voice(chat_id=update.message.chat_id, voice=speech)
+
+
+def sasai(bot, update, args):
+    who = ' '.join(args)
+    bot.send_message(chat_id=update.message.chat_id, text='%s наклоняется и делает нежный сасай %s' %
+            (who, update.message.from_user.name))
 
 
 def error(bot, update, error):
@@ -244,18 +232,19 @@ def error(bot, update, error):
 
 
 def main():
-    global jobs
-
-    #os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-
     updater = Updater(BOT_TOKEN)
-    jobs = updater.job_queue
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler('start', start))
     dp.add_handler(CommandHandler('help', help))
+    dp.add_handler(CommandHandler('timer', timer,
+                                        pass_args=True,
+                                        pass_job_queue=True,
+                                        pass_chat_data=True))
+    dp.add_handler(CommandHandler('say', say, pass_args=True))
+    dp.add_handler(CommandHandler('sasai', sasai, pass_args=True))
 
-    dp.add_handler(MessageHandler(Filters.text, echo))
+    dp.add_handler(MessageHandler(Filters.text, echo, pass_chat_data=True))
     #dp.add_handler(InlineQueryHandler(inlinequery))
 
     dp.add_error_handler(error)
@@ -266,3 +255,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
