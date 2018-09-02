@@ -132,8 +132,10 @@ def start(bot, update):
 def help(bot, update):
     update.message.reply_text('RTFM')
 
+def september_3rd_timeout(bot, job):
+    del job.context['september_3rd']
 
-def echo(bot, update, chat_data):
+def echo(bot, update, job_queue, chat_data):
     entities = update.message.parse_entities().values()
     if '#нарубите' in entities:
         urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', update.message.text)
@@ -155,6 +157,17 @@ def echo(bot, update, chat_data):
                 # FIX
                 chat_data['not_pidors'].add(str(update.message.from_user.id))
                 return
+
+    if 'september_3rd' not in chat_data and update.message.date.month == 9 and update.message.date.day == 3:
+        chat_data['chat_id'] = update.message.chat_id
+        chat_data['september_3rd'] = True
+        bot.send_message(chat_data['chat_id'],'''Я календарь переверну,
+И снова третье сентября.
+На фото я твоё взгляну,
+И снова третье сентября.
+
+https://youtu.be/PQ02jz-UgeA''')
+        job_queue.run_once(september_3rd_timeout, WAIT_AMOUNT, context=chat_data)
 
 
 def pidors_reminder_callback(bot, job):
@@ -244,7 +257,7 @@ def main():
     dp.add_handler(CommandHandler('say', say, pass_args=True))
     dp.add_handler(CommandHandler('sasai', sasai, pass_args=True))
 
-    dp.add_handler(MessageHandler(Filters.text, echo, pass_chat_data=True))
+    dp.add_handler(MessageHandler(Filters.text, echo, pass_job_queue=True, pass_chat_data=True))
     #dp.add_handler(InlineQueryHandler(inlinequery))
 
     dp.add_error_handler(error)
