@@ -34,7 +34,7 @@ SCOPES = ['https://www.googleapis.com/auth/youtube']
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
-WAIT_AMOUNT = 60 * 60
+WAIT_AMOUNT = 60 * 60 * 2
 
 all_ids = {}
 with open('userids.json') as file:
@@ -153,7 +153,7 @@ def echo(bot, update, job_queue, chat_data):
         text = update.message.text.lower()
         for pidor_str in ['пидор', 'пидар', 'пидр', 'пидорас',
                 'підор', 'підар', 'підр', 'підорас', 'підерас']:
-            if pidor_str in text:
+            if 'не ' + pidor_str in text:
                 # FIX
                 chat_data['not_pidors'].add(str(update.message.from_user.id))
                 return
@@ -188,8 +188,12 @@ def pidors_list_text(not_pidors):
 def pidors_callback(bot, job):
     text = 'А вот и список пидарёх: ' + pidors_list_text(job.context['not_pidors'])
     del job.context['pidor_active']
-    bot.send_message(chat_id=job.context['chat_id'], text=text,
-                     parse_mode=telegram.ParseMode.MARKDOWN)
+    if len(job.context['not_pidors']) == 1:
+        bot.send_message(chat_id=job.context['chat_id'], text='Sector clear',
+                         parse_mode=telegram.ParseMode.MARKDOWN)
+    else:
+        bot.send_message(chat_id=job.context['chat_id'], text=text,
+                         parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def timer(bot, update, args, job_queue, chat_data):
@@ -201,7 +205,7 @@ def timer(bot, update, args, job_queue, chat_data):
         update.message.reply_text('/timer <float: minutes>')
         return
 
-    if amount < 5. or amount > 30.:
+    if amount < 15. or amount > 60.:
         update.message.reply_text('Только пидоры ставят такие таймеры')
         return
     if 'pidor_active' in chat_data:
