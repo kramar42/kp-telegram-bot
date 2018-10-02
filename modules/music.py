@@ -25,7 +25,7 @@ API_VERSION = 'v3'
 def create_youtube_service():
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
     credentials = flow.run_console()
-    return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
+    return build(API_SERVICE_NAME, API_VERSION, credentials = credentials, cache_discovery=False)
 
 
 def create_spotify_service():
@@ -95,3 +95,7 @@ def add_to_playlist(url):
         body=resource,
         part='snippet'
     ).execute()
+
+
+def start():
+    pass
