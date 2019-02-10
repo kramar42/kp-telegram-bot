@@ -10,7 +10,7 @@ from telegram.ext import CommandHandler
 
 BOMB_TIMEOUT = 60 * 60 * 24
 BOMB_PIDOR_TIMEOUT = 60 * 60 * 24
-MIN_LENGTH = 4
+MIN_LENGTH = 3
 log = logging.getLogger()
 
 
