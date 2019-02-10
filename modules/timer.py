@@ -51,6 +51,10 @@ def timer(bot, update, args, job_queue, chat_data):
         update.message.reply_text('/timer <float: minutes>')
         return
 
+    if 'bomb_pidors' in chat_data and update.message.from_user.id in chat_data['bomb_pidors']:
+        update.message.reply_text('Пидоры не могут ставить таймеры')
+        return
+
     if amount < 15. or amount > 60.:
         update.message.reply_text('Только пидоры ставят такие таймеры')
         return

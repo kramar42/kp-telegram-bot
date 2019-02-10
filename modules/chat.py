@@ -8,8 +8,16 @@ from telegram.ext import MessageHandler, Filters
 from module import get_module
 
 
-def chat(bot, update, chat_data):
+def chat(bot, update, chat_data, job_queue):
     entities = update.message.parse_entities().values()
+
+    if 'bombs' in chat_data:
+        text = update.message.text.lower()
+        for word in chat_data['bombs'].values():
+            if word in text:
+                get_module('bomb_word').bomb_triggered(bot, job_queue, update, chat_data, word)
+                break
+
     music = get_module('music')
     if '#нарубите' in entities and music:
         urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', update.message.text)
@@ -24,13 +32,14 @@ def chat(bot, update, chat_data):
             bot.send_message(update.message.chat_id, 'https://www.youtube.com/playlist?list=' + PLAYLIST_ID, disable_web_page_preview=True)
 
     if 'pidor_active' in chat_data:
-        text = update.message.text.lower()
-        for pidor_str in ['пидор', 'пидар', 'пидр', 'пидорас', 'підор', 'підар', 'підр', 'підорас', 'підерас']:
-            if 'не ' + pidor_str in text:
-                # FIX
-                chat_data['not_pidors'].add(str(update.message.from_user.id))
-                return
+        if 'bomb_pidors' not in chat_data or update.message.from_user.id not in chat_data['bomb_pidors']:
+            text = update.message.text.lower()
+            for pidor_str in ['пидор', 'пидар', 'пидр', 'пидорас', 'підор', 'підар', 'підр', 'підорас', 'підерас']:
+                if 'не ' + pidor_str in text:
+                    # FIX
+                    chat_data['not_pidors'].add(str(update.message.from_user.id))
+                    return
 
 
 def start():
-    return [MessageHandler(Filters.text, chat, pass_chat_data=True)]
+    return [MessageHandler(Filters.text, chat, pass_chat_data=True, pass_job_queue=True)]

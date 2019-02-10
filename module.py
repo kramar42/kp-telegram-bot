@@ -89,7 +89,7 @@ def get_module(name):
 
 
 def sha256sum(path):
-    with open(path) as f:
+    with open(path, encoding='utf8') as f:
         return hashlib.sha256(f.read().encode('utf8')).hexdigest()
 
 
