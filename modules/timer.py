@@ -64,7 +64,9 @@ def timer(bot, update, args, job_queue, chat_data):
         update.message.reply_text('Только пидоры ставят такие таймеры')
         return
     if 'pidor_active' in chat_data:
-        update.message.reply_text('% уже запустил таймер' % all_ids[chat_data['pidor_user']])
+        pidor_user = str(chat_data['pidor_user'])
+        update.message.reply_text('[%s](tg://user?id=%s) уже запустил таймер' % (all_ids[pidor_user], pidor_user),
+                                  parse_mode=telegram.ParseMode.MARKDOWN)
         return
     if 'pidor_time' in chat_data and time.time() - chat_data['pidor_time'] < WAIT_AMOUNT:
         update.message.reply_text('Заебали со своими таймерами')
