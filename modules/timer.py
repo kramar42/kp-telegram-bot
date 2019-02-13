@@ -35,8 +35,13 @@ def pidors_callback(bot, job):
     text = 'А вот и список пидарёх: ' + pidors_list_text(job.context['not_pidors'])
     del job.context['pidor_active']
     if len(job.context['not_pidors']) == 1:
-        bot.send_message(chat_id=job.context['chat_id'], text='Sector clear',
+        not_pidor = next(iter(job.context['not_pidors']))
+        bot.send_message(chat_id=job.context['chat_id'],
+                         text='Sector clear. [%s](tg://user?id=%s) единственный не пидор.'
+                              % (all_ids[not_pidor], not_pidor),
                          parse_mode=telegram.ParseMode.MARKDOWN)
+        bot.send_sticker(chat_id=job.context['chat_id'],
+                         sticker='CAADBQADpgMAAukKyAN5s5AIa4Wx9AI')
     else:
         bot.send_message(chat_id=job.context['chat_id'], text=text,
                          parse_mode=telegram.ParseMode.MARKDOWN)
