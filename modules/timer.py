@@ -35,13 +35,11 @@ def pidors_callback(bot, job):
     text = 'А вот и список пидарёх: ' + pidors_list_text(job.context['not_pidors'])
     del job.context['pidor_active']
     if len(job.context['not_pidors']) == 1:
-        not_pidor = next(iter(job.context['not_pidors']))
-        bot.send_message(chat_id=job.context['chat_id'],
-                         text='Sector clear. [%s](tg://user?id=%s) единственный не пидор.'
-                              % (all_ids[not_pidor], not_pidor),
-                         parse_mode=telegram.ParseMode.MARKDOWN)
-        bot.send_sticker(chat_id=job.context['chat_id'],
-                         sticker='CAADBQADpgMAAukKyAN5s5AIa4Wx9AI')
+        not_pidor = job.context['not_pidors'].pop()
+        bot.send_message(job.context['chat_id'],
+                         'Sector clear. [%s](tg://user?id=%s) единственный не пидор.' % (all_ids[not_pidor], not_pidor),
+                         telegram.ParseMode.MARKDOWN)
+        bot.send_sticker(job.context['chat_id'], 'CAADBQADpgMAAukKyAN5s5AIa4Wx9AI')
     else:
         bot.send_message(chat_id=job.context['chat_id'], text=text,
                          parse_mode=telegram.ParseMode.MARKDOWN)
@@ -65,8 +63,7 @@ def timer(bot, update, args, job_queue, chat_data):
         return
     if 'pidor_active' in chat_data:
         pidor_user = str(chat_data['pidor_user'])
-        update.message.reply_text('[%s](tg://user?id=%s) уже запустил таймер' % (all_ids[pidor_user], pidor_user),
-                                  parse_mode=telegram.ParseMode.MARKDOWN)
+        update.message.reply_text('%s уже запустил таймер' % all_ids[pidor_user])
         return
     if 'pidor_time' in chat_data and time.time() - chat_data['pidor_time'] < WAIT_AMOUNT:
         update.message.reply_text('Заебали со своими таймерами')
