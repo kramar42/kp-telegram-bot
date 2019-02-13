@@ -12,6 +12,13 @@ BOMB_TIMEOUT = 60 * 60 * 24
 BOMB_PIDOR_TIMEOUT = 60 * 60 * 24
 MIN_LENGTH = 3
 log = logging.getLogger()
+english_to_russian = {'a': 'а', 'b': 'в', 'c': 'с', 'd': 'д', 'e': 'е', 'h': 'н',
+                      'i': 'і', 'k': 'к', 'm': 'м', 'n': 'и', 'o': 'о', 'p': 'р',
+                      'r': 'я', 't': 'т', 'u': 'и', 'x': 'х', 'y': 'у', '6': 'б', '0': 'о'}
+
+
+def normalize_text(text):
+    return ''.join([english_to_russian.get(c) or c for c in str(text).lower()])
 
 
 def remove_bomb(bot, job):
@@ -55,7 +62,7 @@ def bomb_word(bot, update, args, job_queue, chat_data):
         update.message.reply_text('Ска, ты тупой? Одно слово бля!')
         return
 
-    word = str(args[0]).lower()
+    word = normalize_text(str(args[0]))
     user_id = update.message.from_user.id
 
     if 'bombs' not in chat_data:
