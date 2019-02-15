@@ -13,14 +13,14 @@ BOMB_PIDOR_TIMEOUT = 60 * 60 * 24
 MIN_LENGTH = 3
 log = logging.getLogger()
 
-case_sensitive_letters = {'B': 'В', 'H': 'Н', 'M': 'М', 'T': 'Т', 'u': 'и', 'r': 'г'}
-common_letters = {'a': 'а', 'c': 'с', 'e': 'е', 'i': 'і', 'k': 'к', 'o': 'о', 'p': 'р',
+CASE_SENSITIVE_LETTERS = {'B': 'В', 'H': 'Н', 'M': 'М', 'T': 'Т', 'u': 'и', 'r': 'г'}
+COMMON_LETTERS = {'a': 'а', 'c': 'с', 'e': 'е', 'i': 'і', 'k': 'к', 'o': 'о', 'p': 'р',
                   'x': 'х', 'y': 'у', '6': 'б', '0': 'о'}
 
 
 def normalize_text(text):
-    case_sensitive = [case_sensitive_letters.get(c) or c for c in text]
-    return ''.join([common_letters.get(c.lower()) or c.lower() for c in case_sensitive])
+    case_sensitive = [CASE_SENSITIVE_LETTERS.get(c) or c for c in text]
+    return ''.join([COMMON_LETTERS.get(c.lower()) or c.lower() for c in case_sensitive])
 
 
 def remove_bomb(bot, job):
