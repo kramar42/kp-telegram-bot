@@ -12,10 +12,11 @@ def chat(bot, update, chat_data, job_queue):
     entities = update.message.parse_entities().values()
 
     if 'bombs' in chat_data:
-        text = update.message.text.lower()
+        bomb_word = get_module('bomb_word')
+        text = bomb_word.normalize_text(update.message.text)
         for word in chat_data['bombs'].values():
             if word in text:
-                get_module('bomb_word').bomb_triggered(bot, job_queue, update, chat_data, word)
+                bomb_word.bomb_triggered(bot, job_queue, update, chat_data, word)
                 break
 
     music = get_module('music')

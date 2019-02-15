@@ -13,6 +13,15 @@ BOMB_PIDOR_TIMEOUT = 60 * 60 * 24
 MIN_LENGTH = 3
 log = logging.getLogger()
 
+CASE_SENSITIVE_LETTERS = {'B': 'В', 'H': 'Н', 'M': 'М', 'T': 'Т', 'u': 'и', 'r': 'г'}
+COMMON_LETTERS = {'a': 'а', 'c': 'с', 'e': 'е', 'i': 'і', 'k': 'к', 'o': 'о', 'p': 'р',
+                  'x': 'х', 'y': 'у', '6': 'б', '0': 'о'}
+
+
+def normalize_text(text):
+    case_sensitive = [CASE_SENSITIVE_LETTERS.get(c) or c for c in text]
+    return ''.join([COMMON_LETTERS.get(c.lower()) or c.lower() for c in case_sensitive])
+
 
 def remove_bomb(bot, job):
     bomber = job.context['bomber']
@@ -55,7 +64,7 @@ def bomb_word(bot, update, args, job_queue, chat_data):
         update.message.reply_text('Ска, ты тупой? Одно слово бля!')
         return
 
-    word = str(args[0]).lower()
+    word = normalize_text(str(args[0]))
     user_id = update.message.from_user.id
 
     if 'bombs' not in chat_data:
