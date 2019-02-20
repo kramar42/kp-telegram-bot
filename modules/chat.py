@@ -11,6 +11,9 @@ from module import get_module
 def chat(bot, update, chat_data, job_queue):
     entities = update.message.parse_entities().values()
 
+    if get_module('infometr').check_info(update.message.text) == 100:
+        update.message.reply_text('Инфа 100%')
+
     if 'bombs' in chat_data:
         bomb_word = get_module('bomb_word')
         text = bomb_word.normalize_text(update.message.text)
