@@ -20,7 +20,7 @@ COMMON_LETTERS = {'a': 'а', 'c': 'с', 'e': 'е', 'i': 'і', 'k': 'к', 'o': '�
 
 def normalize_text(text):
     case_sensitive = [CASE_SENSITIVE_LETTERS.get(c) or c for c in text]
-    return ''.join([COMMON_LETTERS.get(c.lower()) or c.lower() for c in case_sensitive])
+    return ''.join([COMMON_LETTERS.get(c.lower()) or c.lower() for c in case_sensitive]).split()
 
 
 def remove_bomb(bot, job):
@@ -64,7 +64,7 @@ def bomb_word(bot, update, args, job_queue, chat_data):
         update.message.reply_text('Ска, ты тупой? Одно слово бля!')
         return
 
-    word = normalize_text(str(args[0]))
+    word = normalize_text(str(args[0]))[0]
     user_id = update.message.from_user.id
 
     if 'bombs' not in chat_data:
