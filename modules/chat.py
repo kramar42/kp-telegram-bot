@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import logging
 import re
 
 from telegram.ext import MessageHandler, Filters
 
 from module import get_module
 
+log = logging.getLogger()
 
 def chat(bot, update, chat_data, job_queue):
     entities = update.message.parse_entities().values()
@@ -17,9 +19,10 @@ def chat(bot, update, chat_data, job_queue):
     if 'bombs' in chat_data:
         bomb_word = get_module('bomb_word')
         text = bomb_word.normalize_text(update.message.text)
-        for word in chat_data['bombs'].values():
-            if word in text:
-                bomb_word.bomb_triggered(bot, job_queue, update, chat_data, word)
+        for bomber, bombinfo in chat_data['bombs'].items():
+            log.debug('word: ' + bombinfo['word'])
+            if bombinfo['word'] in text:
+                bomb_word.bomb_triggered(bot, job_queue, update, chat_data, bomber)
                 break
 
     music = get_module('music')
