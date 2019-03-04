@@ -66,9 +66,7 @@ def bomb_info_payload_generator(chat_data):
             % '\n          '.join(casualties_list_str))
 
     reply_payload = '```'
-    reply_payload += '\n================================'
-    reply_payload += '\n--------------------------------'.join(per_bomb_reply_payload_list)
-    reply_payload += '\n================================'
+    reply_payload += '\n'.join(per_bomb_reply_payload_list)
     reply_payload += '\n```'
     return reply_payload
 
@@ -148,8 +146,7 @@ def bomb_info(bot, update, args, job_queue, chat_data):
         update.message.reply_text('бомб нет лел кок')
         return
 
-    reply_payload = 'бомбы:\n'
-    reply_payload += bomb_info_payload_generator(chat_data)
+    reply_payload = bomb_info_payload_generator(chat_data)
 
     update.message.reply_text(reply_payload, parse_mode=telegram.ParseMode.MARKDOWN)
 
