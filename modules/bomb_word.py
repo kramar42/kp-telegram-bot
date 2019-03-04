@@ -37,11 +37,8 @@ def normalize_text(text):
     return ''.join([COMMON_LETTERS.get(c.lower()) or c.lower() for c in case_sensitive]).split()
 
 
-def username_by_id(chat_data, user_id):
-    retval = user_id
-    if (str(user_id) in chat_data['users']):
-        retval = chat_data['users'][str(user_id)]
-    return retval
+def get_username_by_id(chat_data, user_id):
+    return chat_data['users'].get(str(user_id), str(user_id))
 
 
 # Generates info about active bombs
@@ -49,12 +46,12 @@ def bomb_info_payload_generator(chat_data):
     per_bomb_reply_payload_list = []
     for user_id, bombinfo in chat_data['bombs'].items():
         # setting the bomb author
-        display_user_name = username_by_id(chat_data, user_id)
+        display_user_name = get_username_by_id(chat_data, user_id)
         # setting casualties info
         casualties_count = 0
         casualties_list_str = []
         for user, count in bombinfo['casualties'].items():
-            casualties_list_str.append('%s (%d)' % (username_by_id(chat_data, user), count))
+            casualties_list_str.append('%s (%d)' % (get_username_by_id(chat_data, user), count))
             casualties_count += count
         # setting an expiration message
         mins_left = (bombinfo['expiration_timestamp'] - time.time()) / 60
@@ -93,7 +90,7 @@ def bomb_triggered(bot, job_queue, update, chat_data, bomber):
         chat_data['not_pidors'].remove(str(user_id))
 
     # updating casualties info
-    if (not user_id in chat_data['bombs'][bomber]['casualties']):
+    if user_id not in chat_data['bombs'][bomber]['casualties']:
         chat_data['bombs'][bomber]['casualties'][user_id] = 0
     chat_data['bombs'][bomber]['casualties'][user_id] += 1
 
@@ -147,7 +144,7 @@ def bomb_word(bot, update, args, job_queue, chat_data):
 def bomb_info(bot, update, args, job_queue, chat_data):
     initialize_containers(chat_data)
     # reply_payload = json.dumps(chat_data['bombs'])
-    if (not len(chat_data['bombs'])):
+    if not chat_data['bombs']:
         update.message.reply_text('бомб нет лел кок')
         return
 
