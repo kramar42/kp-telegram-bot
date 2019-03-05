@@ -19,11 +19,11 @@ def chat(bot, update, chat_data, job_queue):
     if 'bombs' in chat_data:
         bomb_word = get_module('bomb_word')
         text = bomb_word.normalize_text(update.message.text)
+        bombers = set()
         for bomber, bombinfo in chat_data['bombs'].items():
             log.debug('word: ' + bombinfo['word'])
-            if bombinfo['word'] in text:
-                bomb_word.bomb_triggered(bot, job_queue, update, chat_data, bomber)
-                break
+            if bombinfo['word'] in text: bombers.add(bomber)
+        bombers and bomb_word.trigger_bombers(bot, job_queue, update, chat_data, bombers)
 
     music = get_module('music')
     if '#нарубите' in entities and music:
