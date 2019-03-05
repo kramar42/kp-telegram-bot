@@ -64,7 +64,8 @@ def bomb_info_payload_generator(chat_data):
             + '\n   жертв: %d' % casualties_count
             + '\nосталось: %s' % expiration_readable
             + '\n  сосеры: %s'
-            % '\n          '.join(casualties_list_str))
+            % '\n          '.join(casualties_list_str) if casualties_list_str
+                                                       else '')
 
     reply_payload = '```'
     reply_payload += '\n'.join(per_bomb_reply_payload_list)
