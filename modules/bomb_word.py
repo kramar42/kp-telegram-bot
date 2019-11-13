@@ -4,6 +4,7 @@ import logging
 import time
 import json # For debugging purposes only.
 import telegram
+from collections import defaultdict
 
 from telegram.ext import CommandHandler
 
@@ -63,7 +64,8 @@ def bomb_info_payload_generator(chat_data):
             + '\n   жертв: %d' % casualties_count
             + '\nосталось: %s' % expiration_readable
             + '\n  сосеры: %s'
-            % '\n          '.join(casualties_list_str))
+            % '\n          '.join(casualties_list_str) if casualties_list_str
+                                                       else '')
 
     reply_payload = '```'
     reply_payload += '\n'.join(per_bomb_reply_payload_list)
@@ -79,7 +81,7 @@ def remove_bomb(bot, job):
         log.debug("Bomb %s removed!" % bombinfo['word'])
 
 
-def bomb_triggered(bot, job_queue, update, chat_data, bomber):
+def trigger_bombers(bot, job_queue, update, chat_data, bombers):
     user_id = update.message.from_user.id
 
     chat_data['bomb_pidors'][user_id] = time.time()
@@ -88,15 +90,20 @@ def bomb_triggered(bot, job_queue, update, chat_data, bomber):
         chat_data['not_pidors'].remove(str(user_id))
 
     # updating casualties info
-    if user_id not in chat_data['bombs'][bomber]['casualties']:
-        chat_data['bombs'][bomber]['casualties'][user_id] = 0
-    chat_data['bombs'][bomber]['casualties'][user_id] += 1
+    for bomber in bombers:
+        chat_data['bombs'][bomber]['casualties'][user_id] += 1
 
     job_queue.run_once(remove_pidor, BOMB_PIDOR_TIMEOUT, context={'id': user_id, 'chat_data': chat_data})
 
-    update.message.reply_text(
-        'Ты обосрался! Слово \"%s\" было бомбой! Теперь ты пидор на целый день! Л*ОХ' %
-        chat_data['bombs'][bomber]['word'])
+    if len(bombers) == 1:
+        update.message.reply_text(
+            'Ты обосрался! Слово \"%s\" было бомбой! Теперь ты пидор на целый день! Л*ОХ' %
+            chat_data['bombs'][bomber]['word'])
+    else:
+        update.message.reply_text(
+            'Да ты обделался! Слова \"%s\" были заминированы! ЛО*Х' %
+            ', '.join(map(lambda b: chat_data['bombs'][b]['word'],
+                          bombers)))
 
 
 def remove_pidor(bot, job):
@@ -132,7 +139,7 @@ def bomb_word(bot, update, args, job_queue, chat_data):
     else:
         chat_data['bombs'][user_id] = {}
         chat_data['bombs'][user_id]['word'] = word
-        chat_data['bombs'][user_id]['casualties'] = {}
+        chat_data['bombs'][user_id]['casualties'] = defaultdict(int)
         chat_data['bombs'][user_id]['expiration_timestamp'] = time.time() + BOMB_TIMEOUT
         chat_data['chat_id'] = update.message.chat_id
         job_queue.run_once(remove_bomb, BOMB_TIMEOUT, context={'bomber': user_id, 'chat_data': chat_data})
