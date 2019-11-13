@@ -9,10 +9,6 @@ import os
 import traceback
 
 
-MODULES_PATH = 'modules/*.py'
-modules = {}
-
-
 class Module:
     def __init__(self, path):
         self.name = get_name(path)
@@ -31,61 +27,80 @@ class Module:
         self.handlers = self.module.start() or []
 
 
-def load_modules():
-    files = set(glob.glob(MODULES_PATH))
-    global modules
-    loaded_files = set(m.path for m in modules.values())
-    new_files = files - loaded_files
+class ModulesManager:
+    def __init__(self, path):
+        self.path = path
+        self.log = logging.getLogger()
+        self.modules = {}
+        self.new_modules = []
 
-    new_modules = []
-    existing_modules = [modules[get_name(p)] for p in files & loaded_files]
-    old_modules = [modules[get_name(p)] for p in loaded_files - files]
 
-    log = logging.getLogger()
+    def import_new_modules(self):
+        files = set(glob.glob(self.path))
+        loaded_files = set(m.path for m in self.modules.values())
+        new_files = files - loaded_files
 
-    # load new modules
-    for file in new_files:
-        try:
-            module = Module(file)
-            modules[module.name] = module
-            new_modules.append(module)
-            log.info("imported '%s' module", module.name)
-        except Exception as e:
-            log.error("importing of '%s' module failed: %s", get_name(file), e)
-            log.debug('%s', traceback.format_exc())
+        # load new modules
+        for file in new_files:
+            try:
+                module = Module(file)
+                self.modules[module.name] = module
+                self.new_modules.append(module)
+                self.log.info("imported '%s' module", module.name)
+            except Exception as e:
+                self.log.error("importing of '%s' module failed: %s", get_name(file), e)
+                self.log.debug('%s', traceback.format_exc())
 
-    # get handler dispatcher from core module
-    dispatcher = modules['core'].module.dispatcher
-    def add_handlers(handlers):
-        for handler in handlers:
-            dispatcher.add_handler(handler)
-    def remove_handlers(handlers):
-        for handler in handlers:
-            dispatcher.remove_handler(handler)
 
-    # reload existing modules
-    for module in (m for m in existing_modules if sha256sum(m.path) != m.hashsum):
-        remove_handlers(module.handlers)
-        module.reload()
-        new_modules.insert(0, module)
-        log.info("reloaded '%s' module", module.name)
+    def start_modules(self, dispatcher):
+        self.dispatcher = dispatcher
 
-    # start modules
-    for module in new_modules:
-        module.start()
-        add_handlers(module.handlers)
-        log.info("started '%s' module", module.name)
+        for module in self.new_modules:
+            module.start()
+            for handler in module.handlers:
+                self.dispatcher.add_handler(handler)
+            self.log.info("started '%s' module", module.name)
 
-    # remove old modules
-    for module in old_modules:
-        remove_handlers(module.handlers)
-        del modules[module.name]
-        log.info("removed '%s' module", module.name)
+        self.new_modules.clear()
+
+
+    def reload_modules(self):
+        # helper function
+        def remove_handlers(handlers):
+            for handler in handlers:
+                self.dispatcher.remove_handler(handler)
+
+        files = set(glob.glob(self.path))
+        loaded_files = set(m.path for m in self.modules.values())
+        old_modules = [self.modules[get_name(p)] for p in loaded_files - files]
+        # remove old modules
+        for module in old_modules:
+            remove_handlers(module.handlers)
+            del self.modules[module.name]
+            self.log.info("removed '%s' module", module.name)
+
+        # reload existing modules
+        for module in (m for m in self.modules.values() if sha256sum(m.path) != m.hashsum):
+            remove_handlers(module.handlers)
+            try:
+                module.reload()
+                self.new_modules.append(module)
+                self.log.info("reloaded '%s' module", module.name)
+            except Exception as e:
+                self.log.error("reloading of '%s' module failed: %s", get_name(file), e)
+                self.log.debug('%s', traceback.format_exc())
+
+        self.import_new_modules()
+        self.start_modules(self.dispatcher)
+
+
+    def get_module(self):
+        return self.modules[name].module if name in self.modules else None
 
 
 def get_module(name):
-    global modules
-    return modules[name].module if name in modules else None
+    global manager
+    return manager.get_module(name)
 
 
 def sha256sum(path):
@@ -95,3 +110,7 @@ def sha256sum(path):
 
 def get_name(path):
     return os.path.splitext(os.path.basename(path))[0]
+
+
+MODULES_PATH = 'modules/*.py'
+manager = ModulesManager(MODULES_PATH)
