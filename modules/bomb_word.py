@@ -29,6 +29,7 @@ def initialize_containers(chat_data):
 
     if 'users' not in chat_data:
         chat_data['users'] = {}
+        # TODO: fix this.
         with open('userids.json') as file:
             chat_data['users'].update(json.load(file))
 
