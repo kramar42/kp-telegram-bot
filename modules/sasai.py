@@ -16,5 +16,4 @@ def sasai(bot, update, args):
                 (update.message.from_user.name, who))
 
 
-def start():
-    return [CommandHandler('sasai', sasai, pass_args=True)]
+handlers = [CommandHandler('sasai', sasai, pass_args=True)]

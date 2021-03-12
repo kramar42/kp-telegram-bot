@@ -20,5 +20,4 @@ def infometr(bot, update, args):
     update.message.reply_text('Инфа %d%%' % check_info(text))
 
 
-def start():
-    return [CommandHandler('infa', infometr, pass_args=True)]
+handlers = [CommandHandler('infa', infometr, pass_args=True)]

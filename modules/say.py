@@ -15,5 +15,4 @@ def say(bot, update, args):
         bot.send_voice(chat_id=update.message.chat_id, voice=speech)
 
 
-def start():
-    return [CommandHandler('say', say, pass_args=True)]
+handlers = [CommandHandler('say', say, pass_args=True)]

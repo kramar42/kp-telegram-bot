@@ -82,5 +82,4 @@ def timer(bot, update, args, job_queue, chat_data):
     update.message.reply_text('Bomb has been planted')
 
 
-def start():
-    return [CommandHandler('timer', timer, pass_args=True, pass_job_queue=True, pass_chat_data=True)]
+handlers = [CommandHandler('timer', timer, pass_args=True, pass_job_queue=True, pass_chat_data=True)]
