@@ -11,8 +11,6 @@ from module import get_module
 log = logging.getLogger()
 
 def chat(bot, update, chat_data, job_queue):
-    entities = update.message.parse_entities().values()
-
     if get_module('infometr').check_info(update.message.text) == 100:
         update.message.reply_text('Инфа 100%')
 
@@ -24,19 +22,6 @@ def chat(bot, update, chat_data, job_queue):
             log.debug('word: ' + bombinfo['word'])
             if bombinfo['word'] in text: bombers.add(bomber)
         bombers and bomb_word.trigger_bombers(bot, job_queue, update, chat_data, bombers)
-
-    music = get_module('music')
-    if '#нарубите' in entities and music:
-        urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', update.message.text)
-        for url in urls:
-            if 'spotify' in url:
-                url = music.youtube_search(music.spotify_query(url))
-            if 'youtube' in url.lower():
-                url = re.search('watch?.*v=(.{11}).*', url).group(1)
-
-            music.add_to_playlist(url)
-        if len(urls) == 0:
-            bot.send_message(update.message.chat_id, 'https://www.youtube.com/playlist?list=' + PLAYLIST_ID, disable_web_page_preview=True)
 
     if 'pidor_active' in chat_data:
         if 'bomb_pidors' not in chat_data or update.message.from_user.id not in chat_data['bomb_pidors']:
