@@ -31,7 +31,7 @@ class Module:
         self.handlers = self.module.start() or []
 
 
-def load_modules():
+def load_modules(dispatcher):
     files = set(glob.glob(MODULES_PATH))
     global modules
     loaded_files = set(m.path for m in modules.values())
@@ -54,8 +54,6 @@ def load_modules():
             log.error("importing of '%s' module failed: %s", get_name(file), e)
             log.debug('%s', traceback.format_exc())
 
-    # get handler dispatcher from core module
-    dispatcher = modules['core'].module.dispatcher
     def add_handlers(handlers):
         for handler in handlers:
             dispatcher.add_handler(handler)
