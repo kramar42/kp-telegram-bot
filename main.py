@@ -2,6 +2,7 @@
 
 import logging
 import os
+import sys
 
 from telegram.ext import Updater, CommandHandler
 
@@ -19,6 +20,10 @@ def main():
     log = logging.getLogger()
 
     bot_token = os.environ['BOT_TOKEN']
+    if not bot_token:
+        log.fatal('empty BOT_TOKEN')
+        sys.exit(1)
+
     updater = Updater(bot_token)
     updater.dispatcher.add_error_handler(error)
 
