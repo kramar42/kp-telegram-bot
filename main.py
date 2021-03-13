@@ -8,8 +8,8 @@ from telegram.ext import Updater, CommandHandler
 import modules
 
 
-def error(bot, update, error):
-    logging.getLogger().error(error)
+def error(update, context):
+    logging.getLogger().error("exception while handling an update:", exc_info=context.error)
 
 
 def main():

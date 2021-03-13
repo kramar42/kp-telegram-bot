@@ -4,14 +4,14 @@ from gtts import gTTS
 from telegram.ext import CommandHandler
 
 
-def say(bot, update, args):
-    text = ' '.join(args)
+def say(update, context):
+    text = ' '.join(context.args)
     # TODO guess english text?
     tts = gTTS(text=text, lang='ru')
     # TODO make callback methods async & save speech to temp file with random name
     tts.save('speech.mp3')
     with open('speech.mp3', 'rb') as speech:
-        bot.send_voice(chat_id=update.message.chat_id, voice=speech)
+        update.effective_chat.send_voice(voice=speech)
 
 
-handlers = [CommandHandler('say', say, pass_args=True)]
+handlers = [CommandHandler('say', say)]

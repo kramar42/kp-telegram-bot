@@ -15,36 +15,37 @@ with open('userids.json') as file:
     all_ids.update(json.load(file))
 
 
-def pidors_reminder_callback(bot, job):
-    bot.send_message(chat_id=job.context['chat_id'], text='Осталась минутка, детишки')
+def pidors_reminder_callback(context):
+    context.bot.send_message(chat_id=context['chat_id'], text='Осталась минутка, детишки')
 
 
-def pidors_reminder_last_callback(bot, job):
-    bot.send_message(chat_id=job.context['chat_id'], text='10 сек и Вы пидоры, господа: ' + pidors_list_text(),
-                     parse_mode=telegram.ParseMode.MARKDOWN)
+def pidors_reminder_last_callback(context):
+    context.bot.send_message(chat_id=context['chat_id'], text='10 сек и Вы пидоры, господа: ' + pidors_list_text(),
+                             parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def pidors_list_text(not_pidors):
-    names = ['[%s](tg://user?id=%s)' % (all_ids[id], id) for id in all_ids.keys() if id not in not_pidors]
+    names = [f'[{all_ids[id]}](tg://user?id={id})' for id in all_ids if id not in not_pidors]
     random.shuffle(names)
     return ', '.join(names)
 
 
-def pidors_callback(bot, job):
-    text = 'А вот и список пидарёх: ' + pidors_list_text(job.context['not_pidors'])
-    del job.context['pidor_active']
-    if len(job.context['not_pidors']) == 1:
-        not_pidor = job.context['not_pidors'].pop()
-        bot.send_message(job.context['chat_id'],
-                         'Sector clear. [%s](tg://user?id=%s) единственный не пидор.' % (all_ids[not_pidor], not_pidor),
-                         telegram.ParseMode.MARKDOWN)
-        bot.send_sticker(job.context['chat_id'], 'CAADBQADpgMAAukKyAN5s5AIa4Wx9AI')
+def pidors_callback(context):
+    text = 'А вот и список пидарёх: ' + pidors_list_text(context['not_pidors'])
+    del context['pidor_active']
+    if len(context['not_pidors']) == 1:
+        not_pidor = context['not_pidors'].pop()
+        context.bot.send_message(context['chat_id'],
+                                 f'Sector clear. [{all_ids[not_pidor]}](tg://user?id={not_pidor}) единственный не пидор.',
+                                 telegram.ParseMode.MARKDOWN)
+        context.bot.send_sticker(context['chat_id'], 'CAADBQADpgMAAukKyAN5s5AIa4Wx9AI')
     else:
-        bot.send_message(chat_id=job.context['chat_id'], text=text,
-                         parse_mode=telegram.ParseMode.MARKDOWN)
+        context.bot.send_message(chat_id=context['chat_id'], text=text,
+                                 parse_mode=telegram.ParseMode.MARKDOWN)
 
 
-def timer(bot, update, args, job_queue, chat_data):
+def timer(update, context):
+    args = context.args
     if len(args) == 0:
         args = ['']
     try:
@@ -53,6 +54,7 @@ def timer(bot, update, args, job_queue, chat_data):
         update.message.reply_text('/timer <float: minutes>')
         return
 
+    chat_data = context.chat_data
     if 'bomb_pidors' in chat_data and update.message.from_user.id in chat_data['bomb_pidors']:
         update.message.reply_text('Пидоры не могут ставить таймеры')
         return
@@ -62,7 +64,7 @@ def timer(bot, update, args, job_queue, chat_data):
         return
     if 'pidor_active' in chat_data:
         pidor_user = str(chat_data['pidor_user'])
-        update.message.reply_text('%s уже запустил таймер' % all_ids[pidor_user])
+        update.message.reply_text('{} уже запустил таймер'.format(all_ids[pidor_user]))
         return
     if 'pidor_time' in chat_data and time.time() - chat_data['pidor_time'] < WAIT_AMOUNT:
         update.message.reply_text('Заебали со своими таймерами')
@@ -76,9 +78,9 @@ def timer(bot, update, args, job_queue, chat_data):
     # FIX ids from json file are parsed as strings
     chat_data['not_pidors'].add(str(update.message.from_user.id))
     chat_data['chat_id'] = chat_id
-    job_queue.run_once(pidors_reminder_callback, 60 * (amount - 1), context=chat_data)
-    job_queue.run_once(pidors_callback, 60 * amount, context=chat_data)
+    context.job_queue.run_once(pidors_reminder_callback, 60 * (amount - 1), context=chat_data)
+    context.job_queue.run_once(pidors_callback, 60 * amount, context=chat_data)
     update.message.reply_text('Bomb has been planted')
 
 
-handlers = [CommandHandler('timer', timer, pass_args=True, pass_job_queue=True, pass_chat_data=True)]
+handlers = [CommandHandler('timer', timer)]
