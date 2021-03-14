@@ -28,13 +28,13 @@ class DatabaseClient:
         if not self.connected:
             return
 
-        msg = self._filter_message(message)
+        msg = self._process_message(message)
 
         db_name = f'chat_{message.chat.id}'
         messages = self._client[db_name]['messages']
         messages.insert_one(msg)
 
-    def _filter_message(self, message):
+    def _process_message(self, message):
         fields_to_remove = [
             'chat',
             'delete_chat_photo',
@@ -57,6 +57,9 @@ class DatabaseClient:
         for field in fields_to_remove_if_empty:
             if not msg[field]:
                 msg.pop(field, None)
+
+        if 'reply_to_message' in msg:
+            msg['reply_to_message'] = self._process_message(message.reply_to_message)
 
         return msg
 

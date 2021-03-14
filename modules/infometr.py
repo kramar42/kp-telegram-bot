@@ -3,6 +3,8 @@
 import hashlib
 from telegram.ext import CommandHandler
 
+from .db import client as db_client
+
 DIGITS = 3
 
 
@@ -13,11 +15,14 @@ def check_info(text):
 def infometr(update, context):
     args = context.args
     if len(args) == 0:
-        update.message.reply_text('/infa <text>')
+        reply = update.message.reply_text('/infa <text>')
+        db_client.save_message(reply)
         return
 
     text = ' '.join(args)
-    update.message.reply_text('Инфа %d%%' % check_info(text))
+    infa = check_info(text)
+    reply = update.message.reply_text(f'Инфа {infa}%')
+    db_client.save_message(reply)
 
 
 handlers = [CommandHandler('infa', infometr)]

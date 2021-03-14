@@ -8,6 +8,8 @@ from collections import defaultdict
 import telegram
 from telegram.ext import CommandHandler
 
+from .db import client as db_client
+
 # Bomb feature:
 # once in 24h you can plant word-bomb. If someone in the chat uses this word - he becomes a pidor for 24h
 
@@ -100,11 +102,13 @@ def trigger_bombers(update, context, bombers):
     if len(bombers) == 1:
         msg = 'Ты обосрался! Слово \"{}\" было бомбой! Теперь ты пидор на целый день! Л*ОХ'.format(
             chat_data['bombs'][bomber]['word'])
-        update.message.reply_text(msg)
+        reply = update.message.reply_text(msg)
+        db_client.save_message(reply)
     else:
         msg = 'Да ты обделался! Слова \"{}\" были заминированы! ЛО*Х'.format(
             ', '.join(chat_data['bombs'][b]['word'] for b in bombers))
-        update.message.reply_text(msg)
+        reply = update.message.reply_text(msg)
+        db_client.save_message(reply)
 
 
 def remove_pidor(context):
@@ -121,11 +125,13 @@ def remove_pidor(context):
 def bomb_word(update, context):
     args = context.args
     if len(args) == 0:
-        update.message.reply_text(f'/bomb <word : {MIN_LENGTH} chars min>')
+        reply = update.message.reply_text(f'/bomb <word : {MIN_LENGTH} chars min>')
+        db_client.save_message(reply)
         return
 
     if len(args) > 1:
-        update.message.reply_text('Ска, ты тупой? Одно слово бля!')
+        reply = update.message.reply_text('Ска, ты тупой? Одно слово бля!')
+        db_client.save_message(reply)
         return
 
     word = normalize_text(str(args[0]))[0]
@@ -136,9 +142,11 @@ def bomb_word(update, context):
 
     log.debug(chat_data['bombs'])
     if user_id in chat_data['bombs']:
-        update.message.reply_text('Ска не еби до завтра!')
+        reply = update.message.reply_text('Ска не еби до завтра!')
+        db_client.save_message(reply)
     elif len(word) < MIN_LENGTH:
-        update.message.reply_text('Слово слишком короткое, как и твой член!')
+        reply = update.message.reply_text('Слово слишком короткое, как и твой член!')
+        db_client.save_message(reply)
     else:
         chat_data['bombs'][user_id] = {}
         chat_data['bombs'][user_id]['word'] = word
@@ -146,19 +154,22 @@ def bomb_word(update, context):
         chat_data['bombs'][user_id]['expiration_timestamp'] = time.time() + BOMB_TIMEOUT
         chat_data['chat_id'] = update.message.chat_id
         context.job_queue.run_once(remove_bomb, BOMB_TIMEOUT, context={'bomber': user_id, 'chat_data': chat_data})
-        update.message.reply_text(f'Word bomb has been planted: {word}')
+        reply = update.message.reply_text(f'Word bomb has been planted: {word}')
+        db_client.save_message(reply)
 
 
 def bomb_info(update, context):
     chat_data = context.chat_data
     initialize_containers(chat_data)
     if not chat_data['bombs']:
-        update.message.reply_text('бомб нет лел кок')
+        reply = update.message.reply_text('бомб нет лел кок')
+        db_client.save_message(reply)
         return
 
     reply_payload = bomb_info_payload_generator(chat_data)
 
-    update.message.reply_text(reply_payload, parse_mode=telegram.ParseMode.MARKDOWN)
+    reply = update.message.reply_text(reply_payload, parse_mode=telegram.ParseMode.MARKDOWN)
+    db_client.save_message(reply)
 
 
 handlers = [CommandHandler('bomb', bomb_word),

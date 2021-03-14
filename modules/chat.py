@@ -6,12 +6,15 @@ import re
 from telegram.ext import MessageHandler, Filters
 
 from . import bomb_word
+from .db import client as db_client
 from .infometr import check_info
 
 
 def chat(update, context):
     if check_info(update.message.text) == 100:
-        update.message.reply_text('Инфа 100%')
+        reply = update.message.reply_text('Инфа 100%')
+        db_client.save_message(reply)
+
 
     chat_data = context.chat_data
     if 'bombs' in chat_data:
