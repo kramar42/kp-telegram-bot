@@ -27,8 +27,11 @@ def main():
     updater = Updater(bot_token)
     updater.dispatcher.add_error_handler(error)
 
-    for handler in modules.get_handlers():
-        updater.dispatcher.add_handler(handler)
+    db_uri = os.environ.get('DB_URI')
+    if db_uri:
+        modules.db.client.connect(db_uri)
+
+    modules.register_handlers(updater.dispatcher)
     log.info('registered all handlers')
 
     updater.start_polling()
