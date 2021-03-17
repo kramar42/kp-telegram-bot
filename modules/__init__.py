@@ -9,7 +9,5 @@ from . import timer
 
 
 def get_handlers():
-    from functools import reduce
     modules = [bomb_word, chat, infometr, sasai, say, timer]
-    handlers = [getattr(m, 'handlers', []) for m in modules]
-    return reduce(lambda x, y: x + y, handlers)
+    return [handler for m in modules for handler in getattr(m, 'handlers', [])]
