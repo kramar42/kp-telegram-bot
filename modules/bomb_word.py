@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 import logging
 import time
 import json # For debugging purposes only.
@@ -64,8 +64,8 @@ def bomb_info_payload_generator(chat_data):
             + '\n   жертв: %d' % casualties_count
             + '\nосталось: %s' % expiration_readable
             + '\n  сосеры: %s'
-            % '\n          '.join(casualties_list_str) if casualties_list_str
-                                                       else '')
+            % ('\n          '.join(casualties_list_str) if casualties_list_str
+                                                       else ''))
 
     reply_payload = '```'
     reply_payload += '\n'.join(per_bomb_reply_payload_list)
@@ -158,6 +158,5 @@ def bomb_info(bot, update, args, job_queue, chat_data):
     update.message.reply_text(reply_payload, parse_mode=telegram.ParseMode.MARKDOWN)
 
 
-def start():
-    return [CommandHandler('bomb', bomb_word, pass_args=True, pass_job_queue=True, pass_chat_data=True),
+handlers = [CommandHandler('bomb', bomb_word, pass_args=True, pass_job_queue=True, pass_chat_data=True),
             CommandHandler('bombinfo', bomb_info, pass_args=True, pass_job_queue=True, pass_chat_data=True)]

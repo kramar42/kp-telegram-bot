@@ -1,17 +1,34 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import logging
+import os
 
-from module import load_modules, get_module
+from telegram.ext import Updater, CommandHandler
+
+import modules
+
+
+def error(bot, update, error):
+    logging.getLogger().error(error)
 
 
 def main():
     logging.basicConfig(level=logging.INFO,
                         format='[%(asctime)s][%(module)s][%(levelname)s] %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
-    load_modules()
-    get_module('core').updater.idle()
+    log = logging.getLogger()
+
+    bot_token = os.environ['BOT_TOKEN']
+    updater = Updater(bot_token)
+    updater.dispatcher.add_error_handler(error)
+
+    for handler in modules.get_handlers():
+        updater.dispatcher.add_handler(handler)
+    log.info('registered all handlers')
+
+    updater.start_polling()
+    log.info('bot started')
+    updater.idle()
 
 
 if __name__ == '__main__':
