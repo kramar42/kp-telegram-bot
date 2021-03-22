@@ -5,14 +5,12 @@ import random
 from telegram.ext import CommandHandler
 
 
-def sasai(bot, update, args):
-    who = ' '.join(args)
+def sasai(update, context):
+    who = ' '.join(context.args)
     if random.randint(0, 1) == 0:
-        bot.send_message(chat_id=update.message.chat_id, text='%s наклоняется и делает нежный сасай %s' %
-                (who, update.message.from_user.name))
+        update.effective_chat.send_message(f'{who} наклоняется и делает нежный сасай {update.message.from_user.name}')
     else:
-        bot.send_message(chat_id=update.message.chat_id, text='%s делает первоклассный сасай %s' %
-                (update.message.from_user.name, who))
+        update.effective_chat.send_message(f'{update.message.from_user.name} делает первоклассный сасай {who}')
 
 
-handlers = [CommandHandler('sasai', sasai, pass_args=True)]
+handlers = [CommandHandler('sasai', sasai)]
