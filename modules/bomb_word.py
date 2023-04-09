@@ -61,11 +61,11 @@ def bomb_info_payload_generator(chat_data):
         # combining pieces into the single message and sending
         casualties_list_str = '\n          '.join(casualties_list)
         per_bomb_reply_payload_list.append(f'''
-   бомба: {bombinfo['word']}
-  бомбёр: {display_user_name}
-   жертв: {casualties_count}
-осталось: {expiration_readable}
-  сосеры: {casualties_list_str}
+     бімба: {bombinfo['word']}
+    бімбер: {display_user_name}
+     жертв: {casualties_count}
+залишилось: {expiration_readable}
+    сосєри: {casualties_list_str}
 ''')
 
     reply_payload = '```'
@@ -98,11 +98,11 @@ def trigger_bombers(update, context, bombers):
     context.job_queue.run_once(remove_pidor, BOMB_PIDOR_TIMEOUT, context={'id': user_id, 'chat_data': chat_data})
 
     if len(bombers) == 1:
-        msg = 'Ты обосрался! Слово \"{}\" было бомбой! Теперь ты пидор на целый день! Л*ОХ'.format(
+        msg = 'Ти обісрався! Слово \"{}\" було бімбою! Тепер ти підор на цілий день! Л*ОХ'.format(
             chat_data['bombs'][bomber]['word'])
         update.message.reply_text(msg)
     else:
-        msg = 'Да ты обделался! Слова \"{}\" были заминированы! ЛО*Х'.format(
+        msg = 'Та ти обхезався! Слова \"{}\" були заміновані! ЛО*Х'.format(
             ', '.join(chat_data['bombs'][b]['word'] for b in bombers))
         update.message.reply_text(msg)
 
@@ -125,7 +125,7 @@ def bomb_word(update, context):
         return
 
     if len(args) > 1:
-        update.message.reply_text('Ска, ты тупой? Одно слово бля!')
+        update.message.reply_text('Ска, ти тупий? Одне слово бля!')
         return
 
     word = normalize_text(str(args[0]))[0]
@@ -136,9 +136,9 @@ def bomb_word(update, context):
 
     log.debug(chat_data['bombs'])
     if user_id in chat_data['bombs']:
-        update.message.reply_text('Ска не еби до завтра!')
+        update.message.reply_text('Ска не їби до завтра!')
     elif len(word) < MIN_LENGTH:
-        update.message.reply_text('Слово слишком короткое, как и твой член!')
+        update.message.reply_text('Слово занадто коротке, як і твій член!')
     else:
         chat_data['bombs'][user_id] = {}
         chat_data['bombs'][user_id]['word'] = word
@@ -153,7 +153,7 @@ def bomb_info(update, context):
     chat_data = context.chat_data
     initialize_containers(chat_data)
     if not chat_data['bombs']:
-        update.message.reply_text('бомб нет лел кок')
+        update.message.reply_text('бімб нема лел кок')
         return
 
     reply_payload = bomb_info_payload_generator(chat_data)
