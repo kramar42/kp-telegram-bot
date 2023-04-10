@@ -17,7 +17,7 @@ def infometr(update, context):
         return
 
     text = ' '.join(args)
-    update.message.reply_text('Инфа %d%%' % check_info(text))
+    update.message.reply_text('Інфа %d%%' % check_info(text))
 
 
 handlers = [CommandHandler('infa', infometr)]

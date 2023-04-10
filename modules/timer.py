@@ -16,11 +16,11 @@ with open('userids.json') as file:
 
 
 def pidors_reminder_callback(context):
-    context.bot.send_message(chat_id=context['chat_id'], text='Осталась минутка, детишки')
+    context.bot.send_message(chat_id=context['chat_id'], text='Залишилась хвилинка, дітлахи')
 
 
 def pidors_reminder_last_callback(context):
-    context.bot.send_message(chat_id=context['chat_id'], text='10 сек и Вы пидоры, господа: ' + pidors_list_text(),
+    context.bot.send_message(chat_id=context['chat_id'], text='10 сек і Ви підори, панове: ' + pidors_list_text(),
                              parse_mode=telegram.ParseMode.MARKDOWN)
 
 
@@ -36,7 +36,7 @@ def pidors_callback(context):
     if len(context['not_pidors']) == 1:
         not_pidor = context['not_pidors'].pop()
         context.bot.send_message(context['chat_id'],
-                                 f'Sector clear. [{all_ids[not_pidor]}](tg://user?id={not_pidor}) единственный не пидор.',
+                                 f'Sector clear. [{all_ids[not_pidor]}](tg://user?id={not_pidor}) єдиний не підор.',
                                  telegram.ParseMode.MARKDOWN)
         context.bot.send_sticker(context['chat_id'], 'CAADBQADpgMAAukKyAN5s5AIa4Wx9AI')
     else:
@@ -56,18 +56,18 @@ def timer(update, context):
 
     chat_data = context.chat_data
     if 'bomb_pidors' in chat_data and update.message.from_user.id in chat_data['bomb_pidors']:
-        update.message.reply_text('Пидоры не могут ставить таймеры')
+        update.message.reply_text('Підори не можуть ставити таймери')
         return
 
     if amount < 15. or amount > 60.:
-        update.message.reply_text('Только пидоры ставят такие таймеры')
+        update.message.reply_text('Тількі підори ставлять такі таймери')
         return
     if 'pidor_active' in chat_data:
         pidor_user = str(chat_data['pidor_user'])
-        update.message.reply_text('{} уже запустил таймер'.format(all_ids[pidor_user]))
+        update.message.reply_text('{} вже запустив таймер'.format(all_ids[pidor_user]))
         return
     if 'pidor_time' in chat_data and time.time() - chat_data['pidor_time'] < WAIT_AMOUNT:
-        update.message.reply_text('Заебали со своими таймерами')
+        update.message.reply_text('Заїбали зі своїми таймерами')
         return
 
     chat_id = update.message.chat_id

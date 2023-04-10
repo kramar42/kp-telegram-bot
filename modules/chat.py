@@ -11,7 +11,9 @@ from .infometr import check_info
 
 def chat(update, context):
     if check_info(update.message.text) == 100:
-        update.message.reply_text('Инфа 100%')
+        update.message.reply_text('Інфа 100%')
+    elif any(c in ['Ё', 'ё', 'Ъ', 'ъ', 'Ы', 'ы'] for c in update.message.text):
+        update.message.reply_text('Хуй будеш?')
 
     chat_data = context.chat_data
     if 'bombs' in chat_data:
@@ -25,7 +27,7 @@ def chat(update, context):
     if 'pidor_active' in chat_data:
         if 'bomb_pidors' not in chat_data or update.message.from_user.id not in chat_data['bomb_pidors']:
             text = update.message.text.lower()
-            for pidor_str in ['пидор', 'пидар', 'пидр', 'пидорас', 'підор', 'підар', 'підр', 'підорас', 'підерас']:
+            for pidor_str in ['підор', 'підар', 'підр', 'підорас', 'підерас']:
                 if 'не ' + pidor_str in text:
                     # FIX
                     chat_data['not_pidors'].add(str(update.message.from_user.id))
