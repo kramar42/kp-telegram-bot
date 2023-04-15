@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-
 import logging
 import time
 import json # For debugging purposes only.
 from collections import defaultdict
 
-import telegram
+from telegram.constants import ParseMode
 from telegram.ext import CommandHandler
 
 # Bomb feature:
@@ -74,15 +72,15 @@ def bomb_info_payload_generator(chat_data):
     return reply_payload
 
 
-def remove_bomb(context):
-    bomber = context['bomber']
-    chat_data = context['chat_data']
+async def remove_bomb(context):
+    bomber = context.job.data
+    chat_data = context.chat_data
     if bomber in chat_data['bombs']:
         bombinfo = chat_data['bombs'].pop(bomber)
         log.debug(f"Bomb {bombinfo['word']} removed!")
 
 
-def trigger_bombers(update, context, bombers):
+async def trigger_bombers(update, context, bombers):
     user_id = update.message.from_user.id
 
     chat_data = context.chat_data
@@ -95,21 +93,22 @@ def trigger_bombers(update, context, bombers):
     for bomber in bombers:
         chat_data['bombs'][bomber]['casualties'][user_id] += 1
 
-    context.job_queue.run_once(remove_pidor, BOMB_PIDOR_TIMEOUT, context={'id': user_id, 'chat_data': chat_data})
+    context.job_queue.run_once(remove_pidor, BOMB_PIDOR_TIMEOUT, data=user_id, chat_id=update.message.chat_id)
 
     if len(bombers) == 1:
         msg = 'Ти обісрався! Слово \"{}\" було бімбою! Тепер ти підор на цілий день! Л*ОХ'.format(
             chat_data['bombs'][bomber]['word'])
-        update.message.reply_text(msg)
+        await update.message.reply_text(msg)
     else:
         msg = 'Та ти обхезався! Слова \"{}\" були заміновані! ЛО*Х'.format(
             ', '.join(chat_data['bombs'][b]['word'] for b in bombers))
-        update.message.reply_text(msg)
+        await update.message.reply_text(msg)
 
 
-def remove_pidor(context):
-    user_id = context['id']
-    bomb_pidors = context['chat_data']['bomb_pidors']
+async def remove_pidor(context):
+    user_id = context.job.data
+    chat_data = context.chat_data
+    bomb_pidors = chat_data['bomb_pidors']
 
     if user_id in bomb_pidors and time.time() - bomb_pidors[user_id] >= BOMB_PIDOR_TIMEOUT:
         bomb_pidors.pop(user_id)
@@ -118,14 +117,14 @@ def remove_pidor(context):
         log.debug("Pidor checked but not removed!")
 
 
-def bomb_word(update, context):
+async def bomb_word(update, context):
     args = context.args
     if len(args) == 0:
-        update.message.reply_text(f'/bomb <word : {MIN_LENGTH} chars min>')
+        await update.message.reply_text(f'/bomb <word : {MIN_LENGTH} chars min>')
         return
 
     if len(args) > 1:
-        update.message.reply_text('Ска, ти тупий? Одне слово бля!')
+        await update.message.reply_text('Ска, ти тупий? Одне слово бля!')
         return
 
     word = normalize_text(str(args[0]))[0]
@@ -136,29 +135,28 @@ def bomb_word(update, context):
 
     log.debug(chat_data['bombs'])
     if user_id in chat_data['bombs']:
-        update.message.reply_text('Ска не їби до завтра!')
+        await update.message.reply_text('Ска не їби до завтра!')
     elif len(word) < MIN_LENGTH:
-        update.message.reply_text('Слово занадто коротке, як і твій член!')
+        await update.message.reply_text('Слово занадто коротке, як і твій член!')
     else:
         chat_data['bombs'][user_id] = {}
         chat_data['bombs'][user_id]['word'] = word
         chat_data['bombs'][user_id]['casualties'] = defaultdict(int)
         chat_data['bombs'][user_id]['expiration_timestamp'] = time.time() + BOMB_TIMEOUT
-        chat_data['chat_id'] = update.message.chat_id
-        context.job_queue.run_once(remove_bomb, BOMB_TIMEOUT, context={'bomber': user_id, 'chat_data': chat_data})
-        update.message.reply_text(f'Word bomb has been planted: {word}')
+        context.job_queue.run_once(remove_bomb, BOMB_TIMEOUT, data=user_id, chat_id=update.message.chat_id)
+        await update.message.reply_text(f'Word bomb has been planted: {word}')
 
 
-def bomb_info(update, context):
+async def bomb_info(update, context):
     chat_data = context.chat_data
     initialize_containers(chat_data)
     if not chat_data['bombs']:
-        update.message.reply_text('бімб нема лел кок')
+        await update.message.reply_text('бімб нема лел кок')
         return
 
     reply_payload = bomb_info_payload_generator(chat_data)
 
-    update.message.reply_text(reply_payload, parse_mode=telegram.ParseMode.MARKDOWN)
+    await update.message.reply_text(reply_payload, parse_mode=ParseMode.MARKDOWN_V2)
 
 
 handlers = [CommandHandler('bomb', bomb_word),

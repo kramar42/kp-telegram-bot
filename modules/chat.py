@@ -1,19 +1,16 @@
-# -*- coding: utf-8 -*-
-
 import logging
-import re
 
-from telegram.ext import MessageHandler, Filters
+from telegram.ext import MessageHandler, filters
 
 from . import bomb_word
 from .infometr import check_info
 
 
-def chat(update, context):
+async def chat(update, context):
     if check_info(update.message.text) == 100:
-        update.message.reply_text('Інфа 100%')
+        await update.message.reply_text('Інфа 100%')
     elif any(c in ['Ё', 'ё', 'Ъ', 'ъ', 'Ы', 'ы'] for c in update.message.text):
-        update.message.reply_text('Хуй будеш?')
+        await update.message.reply_text('Хуй будеш?')
 
     chat_data = context.chat_data
     if 'bombs' in chat_data:
@@ -21,8 +18,10 @@ def chat(update, context):
         bombers = set()
         for bomber, bombinfo in chat_data['bombs'].items():
             logging.getLogger().debug('word: ' + bombinfo['word'])
-            if bombinfo['word'] in text: bombers.add(bomber)
-        bombers and bomb_word.trigger_bombers(update, context, bombers)
+            if bombinfo['word'] in text:
+                bombers.add(bomber)
+        if bombers:
+            await bomb_word.trigger_bombers(update, context, bombers)
 
     if 'pidor_active' in chat_data:
         if 'bomb_pidors' not in chat_data or update.message.from_user.id not in chat_data['bomb_pidors']:
@@ -34,4 +33,4 @@ def chat(update, context):
                     return
 
 
-handlers = [MessageHandler(Filters.text & ~Filters.command, chat)]
+handlers = [MessageHandler(filters.TEXT & ~filters.COMMAND, chat)]
