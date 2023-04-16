@@ -18,7 +18,7 @@ def main():
         parser.add_argument(
             "-t",
             "--token",
-            required="BOT_TOKEN" not in os.environ,
+            required=not os.environ.get("BOT_TOKEN"),
             default=os.environ.get("BOT_TOKEN"),
             help="Telegram Bot token",
         )

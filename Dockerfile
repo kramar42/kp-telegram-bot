@@ -5,7 +5,7 @@ WORKDIR /bot
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-COPY kpbot main.py ./
+COPY . .
 
 ENV BOT_TOKEN=
 
