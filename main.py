@@ -22,9 +22,15 @@ def main():
             default=os.environ.get("BOT_TOKEN"),
             help="Telegram Bot token",
         )
+        parser.add_argument(
+            "-a",
+            "--aliases",
+            default=os.environ.get("ALIASES"),
+            help="Path to YAML file with user aliases",
+        )
         args = parser.parse_args()
 
-        application = create_app(args.token)
+        application = create_app(args.token, args.aliases)
         application.run_polling()
     except Exception as e:
         logging.getLogger().critical(e)

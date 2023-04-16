@@ -5,32 +5,35 @@ import time
 from telegram.constants import ParseMode
 from telegram.ext import CommandHandler
 
+from ..alias import get_alias, get_chat_aliases
 
 WAIT_AMOUNT = 60 * 60 * 2
 
-all_ids = {}
-with open('userids.json') as file:
-    all_ids.update(json.load(file))
+
+def create_mention(user_id, alias):
+    return f"[{alias}](tg://user?id={user_id})"
+
+
+def pidors_list_text(chat_id, not_pidors):
+    aliases = get_chat_aliases(chat_id)
+    names = [create_mention(uid, alias) for uid,alias in aliases.items() if uid not in not_pidors]
+    random.shuffle(names)
+    return ', '.join(names)
 
 
 async def pidors_reminder_callback(context):
     await context.bot.send_message(chat_id=context.job.chat_id, text='Залишилась хвилинка, дітлахи')
 
 
-def pidors_list_text(not_pidors):
-    names = [f'[{all_ids[id]}](tg://user?id={id})' for id in all_ids if id not in not_pidors]
-    random.shuffle(names)
-    return ', '.join(names)
-
-
 async def pidors_callback(context):
     chat_data = context.chat_data
-    text = 'А ось і список підорків: ' + pidors_list_text(chat_data['not_pidors'])
+    text = 'А ось і список підорків: ' + pidors_list_text(context.job.chat_id, chat_data['not_pidors'])
     del chat_data['pidor_active']
     if len(chat_data['not_pidors']) == 1:
         not_pidor = chat_data['not_pidors'].pop()
+        alias = get_alias(context.job.chat_id, not_pidor)
         await context.bot.send_message(context.job.chat_id,
-                                 f'Sector clear. [{all_ids[not_pidor]}](tg://user?id={not_pidor}) єдиний не підор.',
+                                 f'Sector clear. {create_mention(not_pidor, alias)} єдиний не підор.',
                                  ParseMode.MARKDOWN_V2)
         await context.bot.send_sticker(context.job.chat_id, 'CAADBQADpgMAAukKyAN5s5AIa4Wx9AI')
     else:
@@ -57,7 +60,8 @@ async def timer(update, context):
         return
     if 'pidor_active' in chat_data:
         pidor_user = str(chat_data['pidor_user'])
-        await update.message.reply_text('{} вже запустив таймер'.format(all_ids[pidor_user]))
+        alias = get_alias(update.message.chat_id, pidor_user)
+        await update.message.reply_text(f'{alias} вже запустив таймер')
         return
     if 'pidor_time' in chat_data and time.time() - chat_data['pidor_time'] < WAIT_AMOUNT:
         await update.message.reply_text('Заїбали зі своїми таймерами')
