@@ -5,7 +5,8 @@ from telegram.ext import CommandHandler
 DIGITS = 3
 
 
-def check_info(text):
+def check_info(text, chat_id):
+    text = f"{chat_id}:{text}"
     return int(hashlib.sha512(text.encode('utf8')).hexdigest()[0:DIGITS], 16) % 101
 
 
@@ -15,7 +16,7 @@ async def infometr(update, context):
         await update.effective_message.reply_text('/infa <text>')
         return
 
-    info = check_info(' '.join(args))
+    info = check_info(' '.join(args), update.effective_message.chat_id)
     await update.effective_message.reply_text(f'Інфа {info}%')
 
 

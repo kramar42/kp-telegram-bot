@@ -7,7 +7,7 @@ from .infometr import check_info
 
 
 async def chat(update, context):
-    if check_info(update.effective_message.text) == 100:
+    if check_info(update.effective_message.text, update.effective_message.chat_id) == 100:
         await update.effective_message.reply_text('Інфа 100%')
     elif any(c in ['Ё', 'ё', 'Ъ', 'ъ', 'Ы', 'ы'] for c in update.effective_message.text):
         await update.effective_message.reply_text('Хуй будеш?')
