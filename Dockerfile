@@ -1,10 +1,12 @@
-FROM python:3-alpine
+FROM python:3.11-slim
 
-COPY . /bot
 WORKDIR /bot
 
+COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
+
+COPY . .
 
 ENV BOT_TOKEN=
 
-CMD ["python3", "main.py"]
+CMD ["python", "main.py"]
