@@ -1,10 +1,11 @@
 import logging
 import time
-import json # For debugging purposes only.
 from collections import defaultdict
 
 from telegram.constants import ParseMode
 from telegram.ext import CommandHandler
+
+from ..alias import get_alias
 
 # Bomb feature:
 # once in 24h you can plant word-bomb. If someone in the chat uses this word - he becomes a pidor for 24h
@@ -26,32 +27,23 @@ def initialize_containers(chat_data):
     if 'bomb_pidors' not in chat_data:
         chat_data['bomb_pidors'] = {}
 
-    if 'users' not in chat_data:
-        chat_data['users'] = {}
-        with open('userids.json') as file:
-            chat_data['users'].update(json.load(file))
-
 
 def normalize_text(text):
     case_sensitive = [CASE_SENSITIVE_LETTERS.get(c) or c for c in text]
     return ''.join([COMMON_LETTERS.get(c.lower()) or c.lower() for c in case_sensitive]).split()
 
 
-def get_username_by_id(chat_data, user_id):
-    return chat_data['users'].get(str(user_id), str(user_id))
-
-
 # Generates info about active bombs
-def bomb_info_payload_generator(chat_data):
+def bomb_info_payload_generator(chat_data, chat_id):
     per_bomb_reply_payload_list = []
     for user_id, bombinfo in chat_data['bombs'].items():
         # setting the bomb author
-        display_user_name = get_username_by_id(chat_data, user_id)
+        author = get_alias(chat_id, user_id)
         # setting casualties info
         casualties_count = 0
         casualties_list = []
         for user, count in bombinfo['casualties'].items():
-            casualties_list.append('{} ({})'.format(get_username_by_id(chat_data, user), count))
+            casualties_list.append('{} ({})'.format(get_alias(chat_id, user), count))
             casualties_count += count
         # setting an expiration message
         mins_left = (bombinfo['expiration_timestamp'] - time.time()) / 60
@@ -60,7 +52,7 @@ def bomb_info_payload_generator(chat_data):
         casualties_list_str = '\n          '.join(casualties_list)
         per_bomb_reply_payload_list.append(f'''
      бімба: {bombinfo['word']}
-    бімбер: {display_user_name}
+    бімбер: {author}
      жертв: {casualties_count}
 залишилось: {expiration_readable}
     сосєри: {casualties_list_str}
@@ -154,7 +146,7 @@ async def bomb_info(update, context):
         await update.message.reply_text('бімб нема лел кок')
         return
 
-    reply_payload = bomb_info_payload_generator(chat_data)
+    reply_payload = bomb_info_payload_generator(chat_data, update.message.chat_id)
 
     await update.message.reply_text(reply_payload, parse_mode=ParseMode.MARKDOWN_V2)
 
