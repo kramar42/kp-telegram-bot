@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from . import bomb_word
 from . import chat
 from . import infometr
