@@ -28,8 +28,7 @@ async def chat(update, context):
             text = update.effective_message.text.lower()
             for pidor_str in ['підор', 'підар', 'підр', 'підорас', 'підерас']:
                 if 'не ' + pidor_str in text:
-                    # FIX
-                    chat_data['not_pidors'].add(str(update.effective_message.from_user.id))
+                    chat_data['not_pidors'].add(update.effective_message.from_user.id)
                     return
 
 

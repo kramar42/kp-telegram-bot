@@ -78,8 +78,8 @@ async def trigger_bombers(update, context, bombers):
     chat_data = context.chat_data
     chat_data['bomb_pidors'][user_id] = time.time()
 
-    if 'not_pidors' in chat_data and str(user_id) in chat_data['not_pidors']:
-        chat_data['not_pidors'].remove(str(user_id))
+    if 'not_pidors' in chat_data and user_id in chat_data['not_pidors']:
+        chat_data['not_pidors'].remove(user_id)
 
     # updating casualties info
     for bomber in bombers:

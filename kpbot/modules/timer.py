@@ -71,8 +71,7 @@ async def timer(update, context):
     chat_data['pidor_user'] = update.effective_message.from_user.id
     chat_data['pidor_time'] = time.time()
     chat_data['not_pidors'] = set()
-    # FIX ids from json file are parsed as strings
-    chat_data['not_pidors'].add(str(update.effective_message.from_user.id))
+    chat_data['not_pidors'].add(update.effective_message.from_user.id)
 
     context.job_queue.run_once(pidors_reminder_callback, 60 * (amount - 1), chat_id=chat_id)
     context.job_queue.run_once(pidors_callback, 60 * amount, chat_id=chat_id)
