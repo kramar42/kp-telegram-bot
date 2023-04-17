@@ -12,11 +12,11 @@ def check_info(text):
 async def infometr(update, context):
     args = context.args
     if len(args) == 0:
-        await update.message.reply_text('/infa <text>')
+        await update.effective_message.reply_text('/infa <text>')
         return
 
     info = check_info(' '.join(args))
-    await update.message.reply_text(f'Інфа {info}%')
+    await update.effective_message.reply_text(f'Інфа {info}%')
 
 
 handlers = [CommandHandler('infa', infometr)]

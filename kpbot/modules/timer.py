@@ -46,37 +46,37 @@ async def timer(update, context):
     try:
         amount = float(args[0])
     except (IndexError, ValueError):
-        await update.message.reply_text('/timer <float: minutes>')
+        await update.effective_message.reply_text('/timer <float: minutes>')
         return
 
     chat_data = context.chat_data
-    if 'bomb_pidors' in chat_data and update.message.from_user.id in chat_data['bomb_pidors']:
-        await update.message.reply_text('Підори не можуть ставити таймери')
+    if 'bomb_pidors' in chat_data and update.effective_message.from_user.id in chat_data['bomb_pidors']:
+        await update.effective_message.reply_text('Підори не можуть ставити таймери')
         return
 
     if amount < 15. or amount > 60.:
-        await update.message.reply_text('Тількі підори ставлять такі таймери')
+        await update.effective_message.reply_text('Тількі підори ставлять такі таймери')
         return
     if 'pidor_active' in chat_data:
         pidor_user = str(chat_data['pidor_user'])
-        alias = get_alias(update.message.chat_id, pidor_user)
-        await update.message.reply_text(f'{alias} вже запустив таймер')
+        alias = get_alias(update.effective_message.chat_id, pidor_user)
+        await update.effective_message.reply_text(f'{alias} вже запустив таймер')
         return
     if 'pidor_time' in chat_data and time.time() - chat_data['pidor_time'] < WAIT_AMOUNT:
-        await update.message.reply_text('Заїбали зі своїми таймерами')
+        await update.effective_message.reply_text('Заїбали зі своїми таймерами')
         return
 
-    chat_id = update.message.chat_id
+    chat_id = update.effective_message.chat_id
     chat_data['pidor_active'] = True
-    chat_data['pidor_user'] = update.message.from_user.id
+    chat_data['pidor_user'] = update.effective_message.from_user.id
     chat_data['pidor_time'] = time.time()
     chat_data['not_pidors'] = set()
     # FIX ids from json file are parsed as strings
-    chat_data['not_pidors'].add(str(update.message.from_user.id))
+    chat_data['not_pidors'].add(str(update.effective_message.from_user.id))
 
     context.job_queue.run_once(pidors_reminder_callback, 60 * (amount - 1), chat_id=chat_id)
     context.job_queue.run_once(pidors_callback, 60 * amount, chat_id=chat_id)
-    await update.message.reply_text('Bomb has been planted')
+    await update.effective_message.reply_text('Bomb has been planted')
 
 
 handlers = [CommandHandler('timer', timer)]
