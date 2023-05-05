@@ -73,28 +73,28 @@ async def remove_bomb(context):
 
 
 async def trigger_bombers(update, context, bombers):
-    user_id = update.message.from_user.id
+    user_id = update.effective_message.from_user.id
 
     chat_data = context.chat_data
     chat_data['bomb_pidors'][user_id] = time.time()
 
-    if 'not_pidors' in chat_data and str(user_id) in chat_data['not_pidors']:
-        chat_data['not_pidors'].remove(str(user_id))
+    if 'not_pidors' in chat_data and user_id in chat_data['not_pidors']:
+        chat_data['not_pidors'].remove(user_id)
 
     # updating casualties info
     for bomber in bombers:
         chat_data['bombs'][bomber]['casualties'][user_id] += 1
 
-    context.job_queue.run_once(remove_pidor, BOMB_PIDOR_TIMEOUT, data=user_id, chat_id=update.message.chat_id)
+    context.job_queue.run_once(remove_pidor, BOMB_PIDOR_TIMEOUT, data=user_id, chat_id=update.effective_message.chat_id)
 
     if len(bombers) == 1:
         msg = 'Ти обісрався! Слово \"{}\" було бімбою! Тепер ти підор на цілий день! Л*ОХ'.format(
             chat_data['bombs'][bomber]['word'])
-        await update.message.reply_text(msg)
+        await update.effective_message.reply_text(msg)
     else:
         msg = 'Та ти обхезався! Слова \"{}\" були заміновані! ЛО*Х'.format(
             ', '.join(chat_data['bombs'][b]['word'] for b in bombers))
-        await update.message.reply_text(msg)
+        await update.effective_message.reply_text(msg)
 
 
 async def remove_pidor(context):
@@ -112,43 +112,43 @@ async def remove_pidor(context):
 async def bomb_word(update, context):
     args = context.args
     if len(args) == 0:
-        await update.message.reply_text(f'/bomb <word : {MIN_LENGTH} chars min>')
+        await update.effective_message.reply_text(f'/bomb <word : {MIN_LENGTH} chars min>')
         return
 
     if len(args) > 1:
-        await update.message.reply_text('Ска, ти тупий? Одне слово бля!')
+        await update.effective_message.reply_text('Ска, ти тупий? Одне слово бля!')
         return
 
     word = normalize_text(str(args[0]))[0]
-    user_id = update.message.from_user.id
+    user_id = update.effective_message.from_user.id
 
     chat_data = context.chat_data
     initialize_containers(chat_data)
 
     log.debug(chat_data['bombs'])
     if user_id in chat_data['bombs']:
-        await update.message.reply_text('Ска не їби до завтра!')
+        await update.effective_message.reply_text('Ска не їби до завтра!')
     elif len(word) < MIN_LENGTH:
-        await update.message.reply_text('Слово занадто коротке, як і твій член!')
+        await update.effective_message.reply_text('Слово занадто коротке, як і твій член!')
     else:
         chat_data['bombs'][user_id] = {}
         chat_data['bombs'][user_id]['word'] = word
         chat_data['bombs'][user_id]['casualties'] = defaultdict(int)
         chat_data['bombs'][user_id]['expiration_timestamp'] = time.time() + BOMB_TIMEOUT
-        context.job_queue.run_once(remove_bomb, BOMB_TIMEOUT, data=user_id, chat_id=update.message.chat_id)
-        await update.message.reply_text(f'Word bomb has been planted: {word}')
+        context.job_queue.run_once(remove_bomb, BOMB_TIMEOUT, data=user_id, chat_id=update.effective_message.chat_id)
+        await update.effective_message.reply_text(f'Word bomb has been planted: {word}')
 
 
 async def bomb_info(update, context):
     chat_data = context.chat_data
     initialize_containers(chat_data)
     if not chat_data['bombs']:
-        await update.message.reply_text('бімб нема лел кок')
+        await update.effective_message.reply_text('бімб нема лел кок')
         return
 
     reply_payload = bomb_info_payload_generator(chat_data, update.message.chat_id)
 
-    await update.message.reply_text(reply_payload, parse_mode=ParseMode.MARKDOWN_V2)
+    await update.effective_message.reply_text(reply_payload, parse_mode=ParseMode.MARKDOWN_V2)
 
 
 handlers = [CommandHandler('bomb', bomb_word),
