@@ -2,6 +2,8 @@ import hashlib
 
 from telegram.ext import CommandHandler
 
+from ..db import send_and_archive
+
 DIGITS = 3
 
 
@@ -13,11 +15,13 @@ def check_info(text, chat_id):
 async def infometr(update, context):
     args = context.args
     if len(args) == 0:
-        await update.effective_message.reply_text('/infa <text>')
+        reply = update.effective_message.reply_text('/infa <text>')
+        await send_and_archive(reply)
         return
 
     info = check_info(' '.join(args), update.effective_message.chat_id)
-    await update.effective_message.reply_text(f'Інфа {info}%')
+    reply = update.effective_message.reply_text(f'Інфа {info}%')
+    await send_and_archive(reply)
 
 
 handlers = [CommandHandler('infa', infometr)]
