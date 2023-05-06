@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+  bot:
+    build: .
+    environment:
+     - ALIASES=${ALIASES}
+     - BOT_TOKEN=${BOT_TOKEN}
+     - DB_URI=mongo
+    restart: unless-stopped
+  mongo:
+    image: mongo
+    ports:
+     - "27017:27017"
+    restart: always
