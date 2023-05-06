@@ -10,9 +10,9 @@ class DatabaseClient:
     def __init__(self):
         self._connected = None
 
-    def connect(self, uri):
+    def connect(self, uri, db_name):
         self._client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=500)
-        self._db = self._client["chat_history"]
+        self._db = self._client[db_name]
         log.info(f"connecting to {uri}")
 
     async def insert(self, collection, document):
@@ -54,11 +54,12 @@ def process_message(message):
     msg = message.to_dict()
 
     fields_to_remove = (
+        "channel_chat_created",
         "chat",
         "delete_chat_photo",
+        "entities",
         "group_chat_created",
         "supergroup_chat_created",
-        "channel_chat_created",
     )
 
     msg = delete_dict_keys(msg, fields_to_remove)
@@ -79,23 +80,33 @@ def process_message(message):
     return msg
 
 
-def connect(db_uri):
+def init(db_uri):
     if not db_uri:
         log.info("no DB connection")
         return False
 
     global client
-    client.connect(db_uri)
+    client.connect(db_uri, "chat_history")
     return True
 
 
-async def archive(update, context):
-    chat_id = update.effective_message.chat_id
-    msg = process_message(update.effective_message)
+async def archive(message):
+    chat_id = message.chat_id
+    msg = process_message(message)
 
     global client
     await client.insert(f"chat:{chat_id}", msg)
 
 
+async def send_and_archive(reply):
+    message = await reply
+    await archive(message)
+
+
+async def message_handler(update, context):
+    message = update.effective_message
+    await archive(message)
+
+
 client = DatabaseClient()
-handlers = [MessageHandler(filters.ALL, archive)]
+handlers = [MessageHandler(filters.ALL, message_handler)]
