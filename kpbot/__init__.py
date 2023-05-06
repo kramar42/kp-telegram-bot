@@ -3,7 +3,7 @@ import logging
 from telegram.ext import ApplicationBuilder
 
 from .alias import parse_aliases
-from .db import connect
+from .db import connect, handlers as db_handlers
 from .modules import get_handlers
 
 log = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ def create_app(token: str, aliases: str | None = None, db_uri: str | None = None
     log.info("registered all handlers")
 
     parse_aliases(aliases)
-    connect(db_uri)
+    if connect(db_uri):
+        application.add_handlers(db_handlers, -1)
 
     return application
