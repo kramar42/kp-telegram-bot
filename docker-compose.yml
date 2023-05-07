@@ -6,6 +6,7 @@ services:
      - ALIASES=${ALIASES}
      - BOT_TOKEN=${BOT_TOKEN}
      - DB_URI=mongo
+     - OPENAI_API_KEY=${OPENAI_API_KEY}
     restart: unless-stopped
   mongo:
     image: mongo
