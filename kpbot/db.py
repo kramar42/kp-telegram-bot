@@ -28,18 +28,15 @@ class DatabaseClient:
         if self._connected:
             await self._db[collection].insert_one(document)
 
-
     async def archive(self, message):
         chat_id = message.chat_id
         msg = cleanup_message(message)
 
         await self.insert(f"chat:{chat_id}", msg)
 
-
-    async def message_handler(self, update, context):
+    async def message_handler(self, update, _):
         message = update.effective_message
         await self.archive(message)
-
 
     def get_handlers(self):
         return [MessageHandler(filters.ALL, self.message_handler)]
@@ -80,11 +77,3 @@ def cleanup_message(message):
         msg["reply_to_message"] = cleanup_message(message.reply_to_message)
 
     return msg
-
-
-# TODO remove in favour of kpbot.reply
-async def reply(reply):
-    message = await reply
-
-    global client
-    await client.archive(message)
