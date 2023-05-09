@@ -47,7 +47,7 @@ client = DatabaseClient()
 
 def select_keys(dictionary, keys):
     if isinstance(keys, dict):
-        return {k: select_keys(dictionary[k], keys[k]) for k in keys}
+        return {k: select_keys(dictionary[k], keys[k]) for k in keys if k in dictionary}
     elif isinstance(keys, tuple):
         return {k: dictionary[k] for k in keys if k in dictionary}
     else:
