@@ -51,29 +51,29 @@ async def timer(update, context):
     try:
         amount = float(args[0])
     except (IndexError, ValueError):
-        reply = update.effective_message.reply_text('/timer <float: minutes>')
-        await reply(reply)
+        response = update.effective_message.reply_text('/timer <float: minutes>')
+        await reply(response)
         return
 
     chat_data = context.chat_data
     if 'bomb_pidors' in chat_data and update.effective_message.from_user.id in chat_data['bomb_pidors']:
-        reply = update.effective_message.reply_text('Підори не можуть ставити таймери')
-        await reply(reply)
+        response = update.effective_message.reply_text('Підори не можуть ставити таймери')
+        await reply(response)
         return
 
     if amount < 15. or amount > 60.:
-        reply = update.effective_message.reply_text('Тількі підори ставлять такі таймери')
-        await reply(reply)
+        response = update.effective_message.reply_text('Тількі підори ставлять такі таймери')
+        await reply(response)
         return
     if 'pidor_active' in chat_data:
         pidor_user = chat_data['pidor_user']
         alias = get_alias(update.effective_message.chat_id, pidor_user)
-        reply = update.effective_message.reply_text(f'{alias} вже запустив таймер')
-        await reply(reply)
+        response = update.effective_message.reply_text(f'{alias} вже запустив таймер')
+        await reply(response)
         return
     if 'pidor_time' in chat_data and time.time() - chat_data['pidor_time'] < WAIT_AMOUNT:
-        reply = update.effective_message.reply_text('Заїбали зі своїми таймерами')
-        await reply(reply)
+        response = update.effective_message.reply_text('Заїбали зі своїми таймерами')
+        await reply(response)
         return
 
     chat_id = update.effective_message.chat_id
@@ -85,8 +85,8 @@ async def timer(update, context):
 
     context.job_queue.run_once(pidors_reminder_callback, 60 * (amount - 1), chat_id=chat_id)
     context.job_queue.run_once(pidors_callback, 60 * amount, chat_id=chat_id)
-    reply = update.effective_message.reply_text('Bomb has been planted')
-    await reply(reply)
+    response = update.effective_message.reply_text('Bomb has been planted')
+    await reply(response)
 
 
 handlers = [CommandHandler('timer', timer)]
