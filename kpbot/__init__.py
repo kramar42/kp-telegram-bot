@@ -22,7 +22,13 @@ def create_app(token: str, aliases: str | None = None, db_uri: str | None = None
     log.info("registered all handlers")
 
     parse_aliases(aliases)
-    if db.init(db_uri):
-        application.add_handlers(db.handlers, -1)
+    if db_uri:
+        db.client.connect(db_uri, "chat_history")
+        application.add_handlers(db.client.get_handlers(), -1)
 
     return application
+
+
+async def reply(reply):
+    message = await reply
+    await db.client.archive(message)
