@@ -26,5 +26,5 @@ def get_chat_aliases(chat_id):
     return _aliases.get(chat_id, {})
 
 
-def get_alias(chat_id, user_id):
-    return get_chat_aliases(chat_id).get(user_id)
+def get_alias(chat_id, user_id, default='ноунейм'):
+    return get_chat_aliases(chat_id).get(user_id) or default
