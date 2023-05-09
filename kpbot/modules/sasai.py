@@ -8,7 +8,7 @@ from ..alias import get_alias
 
 async def sasai(update, context):
     message = update.effective_message
-    author = get_alias(message.chat_id, message.from_user.id) or message.from_user.name[1:]
+    author = get_alias(message.chat_id, message.from_user.id, message.from_user.name[1:])
     target = " ".join(context.args)
 
     if random.randint(0, 1) == 0:
