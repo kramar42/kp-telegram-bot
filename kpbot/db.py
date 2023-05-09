@@ -30,7 +30,7 @@ class DatabaseClient:
 
     async def archive(self, message):
         chat_id = message.chat_id
-        msg = cleanup_message(message)
+        msg = cleanup_message(message.to_dict())
 
         await self.insert(f"chat:{chat_id}", msg)
 
@@ -54,9 +54,7 @@ def select_keys(dictionary, keys):
         return dictionary
 
 
-def cleanup_message(message):
-    msg = message.to_dict()
-
+def cleanup_message(msg):
     # take only last photo
     if "photo" in msg:
         msg["photo"] = msg["photo"][-1]
@@ -73,7 +71,7 @@ def cleanup_message(message):
     })
 
     # cleanup reply if exists
-    if hasattr(message, "reply_to_message"):
-        msg["reply_to_message"] = cleanup_message(message.reply_to_message)
+    if "reply_to_message" in msg:
+        msg["reply_to_message"] = cleanup_message(msg["reply_to_message"])
 
     return msg
