@@ -66,7 +66,7 @@ async def timer(update, context):
         await reply(reply)
         return
     if 'pidor_active' in chat_data:
-        pidor_user = str(chat_data['pidor_user'])
+        pidor_user = chat_data['pidor_user']
         alias = get_alias(update.effective_message.chat_id, pidor_user)
         reply = update.effective_message.reply_text(f'{alias} вже запустив таймер')
         await reply(reply)
