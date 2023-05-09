@@ -28,9 +28,15 @@ def main():
             default=os.environ.get("ALIASES"),
             help="Path to YAML file with user aliases",
         )
+        parser.add_argument(
+            "-d",
+            "--db-uri",
+            default=os.environ.get("DB_URI"),
+            help="Database URI",
+        )
         args = parser.parse_args()
 
-        application = create_app(args.token, args.aliases)
+        application = create_app(args.token, args.aliases, args.db_uri)
         application.run_polling()
     except Exception as e:
         logging.getLogger().critical(e)

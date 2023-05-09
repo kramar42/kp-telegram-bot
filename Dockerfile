@@ -7,6 +7,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-ENV BOT_TOKEN=
-
 CMD ["python", "main.py"]
