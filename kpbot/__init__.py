@@ -4,6 +4,7 @@ from telegram.ext import ApplicationBuilder
 
 from . import db
 from .alias import parse_aliases
+from .utils import reply
 from .modules import get_handlers
 
 log = logging.getLogger(__name__)
@@ -27,8 +28,3 @@ def create_app(token: str, aliases: str | None = None, db_uri: str | None = None
         application.add_handlers(db.client.get_handlers(), -1)
 
     return application
-
-
-async def reply(reply):
-    message = await reply
-    await db.client.archive(message)
