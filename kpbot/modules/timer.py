@@ -5,7 +5,7 @@ from telegram.constants import ParseMode
 from telegram.ext import CommandHandler
 
 from ..alias import get_alias, get_chat_aliases
-from .. import reply
+from ..db import reply
 
 WAIT_AMOUNT = 60 * 60 * 2
 

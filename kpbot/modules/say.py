@@ -1,7 +1,7 @@
 from gtts import gTTS
 from telegram.ext import CommandHandler
 
-from .. import reply
+from ..db import reply
 
 
 async def say(update, context):

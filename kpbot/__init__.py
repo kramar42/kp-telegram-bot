@@ -27,8 +27,3 @@ def create_app(token: str, aliases: str | None = None, db_uri: str | None = None
         application.add_handlers(db.client.get_handlers(), -1)
 
     return application
-
-
-async def reply(reply):
-    message = await reply
-    await db.client.archive(message)

@@ -45,6 +45,12 @@ class DatabaseClient:
 client = DatabaseClient()
 
 
+async def reply(reply):
+    message = await reply
+    global client
+    await client.archive(message)
+
+
 def select_keys(dictionary, keys):
     if isinstance(keys, dict):
         return {k: select_keys(dictionary[k], keys[k]) for k in keys}

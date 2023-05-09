@@ -2,7 +2,7 @@ import hashlib
 
 from telegram.ext import CommandHandler
 
-from .. import reply
+from ..db import reply
 
 DIGITS = 3
 

@@ -6,7 +6,7 @@ from telegram.constants import ParseMode
 from telegram.ext import CommandHandler
 
 from ..alias import get_alias
-from .. import reply
+from ..db import reply
 
 # Bomb feature:
 # once in 24h you can plant word-bomb. If someone in the chat uses this word - he becomes a pidor for 24h

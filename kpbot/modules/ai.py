@@ -3,7 +3,7 @@ import os
 import openai
 from telegram.ext import CommandHandler
 
-from .. import reply
+from ..db import reply
 
 ALLOWED_CHATS = {-1001127597296}
 DEFAULT_SYSTEM_PROMPT = """

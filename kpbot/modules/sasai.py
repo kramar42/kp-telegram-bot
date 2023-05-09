@@ -2,7 +2,7 @@ import random
 
 from telegram.ext import CommandHandler
 
-from .. import reply
+from ..db import reply
 from ..alias import get_alias
 
 

@@ -2,7 +2,7 @@ import logging
 
 from telegram.ext import MessageHandler, filters
 
-from .. import reply
+from ..db import reply
 from . import bomb_word
 from .infometr import check_info
 
