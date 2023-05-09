@@ -152,7 +152,7 @@ async def bomb_info(update, context):
         await reply(response)
         return
 
-    reply_payload = bomb_info_payload_generator(chat_data, update.message.chat_id)
+    reply_payload = bomb_info_payload_generator(chat_data, update.effective_message.chat_id)
 
     response = update.effective_message.reply_text(reply_payload, parse_mode=ParseMode.MARKDOWN_V2)
     await reply(response)
