@@ -6,7 +6,7 @@ from telegram.constants import ParseMode
 from telegram.ext import CommandHandler
 
 from ..alias import get_alias
-from ..db import send_and_archive
+from .. import reply
 
 # Bomb feature:
 # once in 24h you can plant word-bomb. If someone in the chat uses this word - he becomes a pidor for 24h
@@ -91,11 +91,11 @@ async def trigger_bombers(update, context, bombers):
     if len(bombers) == 1:
         msg = 'Ти обісрався! Слово \"{}\" було бімбою! Тепер ти підор на цілий день! Л*ОХ'.format(
             chat_data['bombs'][bomber]['word'])
-        await send_and_archive(update.effective_message.reply_text(msg))
+        await reply(update.effective_message.reply_text(msg))
     else:
         msg = 'Та ти обхезався! Слова \"{}\" були заміновані! ЛО*Х'.format(
             ', '.join(chat_data['bombs'][b]['word'] for b in bombers))
-        await send_and_archive(update.effective_message.reply_text(msg))
+        await reply(update.effective_message.reply_text(msg))
 
 
 def remove_pidor(context):
@@ -114,12 +114,12 @@ async def bomb_word(update, context):
     args = context.args
     if len(args) == 0:
         reply = update.effective_message.reply_text(f'/bomb <word : {MIN_LENGTH} chars min>')
-        await send_and_archive(reply)
+        await reply(reply)
         return
 
     if len(args) > 1:
         reply = update.effective_message.reply_text('Ска, ти тупий? Одне слово бля!')
-        await send_and_archive(reply)
+        await reply(reply)
         return
 
     word = normalize_text(str(args[0]))[0]
@@ -141,7 +141,7 @@ async def bomb_word(update, context):
         context.job_queue.run_once(remove_bomb, BOMB_TIMEOUT, data=user_id, chat_id=update.effective_message.chat_id)
         reply = update.effective_message.reply_text(f'Word bomb has been planted: {word}')
 
-    await send_and_archive(reply)
+    await reply(reply)
 
 
 async def bomb_info(update, context):
@@ -149,13 +149,13 @@ async def bomb_info(update, context):
     initialize_containers(chat_data)
     if not chat_data['bombs']:
         reply = update.effective_message.reply_text('бімб нема лел кок')
-        await send_and_archive(reply)
+        await reply(reply)
         return
 
     reply_payload = bomb_info_payload_generator(chat_data, update.message.chat_id)
 
     reply = update.effective_message.reply_text(reply_payload, parse_mode=ParseMode.MARKDOWN_V2)
-    await send_and_archive(reply)
+    await reply(reply)
 
 
 handlers = [CommandHandler('bomb', bomb_word),

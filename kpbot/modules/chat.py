@@ -2,16 +2,16 @@ import logging
 
 from telegram.ext import MessageHandler, filters
 
-from ..db import send_and_archive
+from .. import reply
 from . import bomb_word
 from .infometr import check_info
 
 
 async def chat(update, context):
     if check_info(update.effective_message.text, update.effective_message.chat_id) == 100:
-        await send_and_archive(update.effective_message.reply_text('Інфа 100%'))
+        await reply(update.effective_message.reply_text('Інфа 100%'))
     elif any(c in ['Ё', 'ё', 'Ъ', 'ъ', 'Ы', 'ы'] for c in update.effective_message.text):
-        await send_and_archive(update.effective_message.reply_text('Хуй будеш?'))
+        await reply(update.effective_message.reply_text('Хуй будеш?'))
 
     chat_data = context.chat_data
     if 'bombs' in chat_data:

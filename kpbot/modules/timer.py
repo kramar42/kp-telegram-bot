@@ -5,7 +5,7 @@ from telegram.constants import ParseMode
 from telegram.ext import CommandHandler
 
 from ..alias import get_alias, get_chat_aliases
-from ..db import send_and_archive
+from .. import reply
 
 WAIT_AMOUNT = 60 * 60 * 2
 
@@ -23,7 +23,7 @@ def pidors_list_text(chat_id, not_pidors):
 
 async def pidors_reminder_callback(context):
     msg = context.bot.send_message(chat_id=context.job.chat_id, text='Залишилась хвилинка, дітлахи')
-    await send_and_archive(msg)
+    await reply(msg)
 
 
 async def pidors_callback(context):
@@ -33,15 +33,15 @@ async def pidors_callback(context):
     if len(chat_data['not_pidors']) == 1:
         not_pidor = chat_data['not_pidors'].pop()
         alias = get_alias(context.job.chat_id, not_pidor)
-        reply = context.bot.send_message(context.job.chat_id,
+        response = context.bot.send_message(context.job.chat_id,
                                          f'Sector clear. {create_mention(not_pidor, alias)} єдиний не підор.',
                                          ParseMode.MARKDOWN_V2)
-        await send_and_archive(reply)
-        reply = context.bot.send_sticker(context.job.chat_id, 'CAADBQADpgMAAukKyAN5s5AIa4Wx9AI')
-        await send_and_archive(reply)
+        await reply(response)
+        response = context.bot.send_sticker(context.job.chat_id, 'CAADBQADpgMAAukKyAN5s5AIa4Wx9AI')
+        await reply(response)
     else:
-        reply = context.bot.send_message(chat_id=context.job.chat_id, text=text, parse_mode=ParseMode.MARKDOWN_V2)
-        await send_and_archive(reply)
+        response = context.bot.send_message(chat_id=context.job.chat_id, text=text, parse_mode=ParseMode.MARKDOWN_V2)
+        await reply(response)
 
 
 async def timer(update, context):
@@ -52,28 +52,28 @@ async def timer(update, context):
         amount = float(args[0])
     except (IndexError, ValueError):
         reply = update.effective_message.reply_text('/timer <float: minutes>')
-        await send_and_archive(reply)
+        await reply(reply)
         return
 
     chat_data = context.chat_data
     if 'bomb_pidors' in chat_data and update.effective_message.from_user.id in chat_data['bomb_pidors']:
         reply = update.effective_message.reply_text('Підори не можуть ставити таймери')
-        await send_and_archive(reply)
+        await reply(reply)
         return
 
     if amount < 15. or amount > 60.:
         reply = update.effective_message.reply_text('Тількі підори ставлять такі таймери')
-        await send_and_archive(reply)
+        await reply(reply)
         return
     if 'pidor_active' in chat_data:
         pidor_user = str(chat_data['pidor_user'])
         alias = get_alias(update.effective_message.chat_id, pidor_user)
         reply = update.effective_message.reply_text(f'{alias} вже запустив таймер')
-        await send_and_archive(reply)
+        await reply(reply)
         return
     if 'pidor_time' in chat_data and time.time() - chat_data['pidor_time'] < WAIT_AMOUNT:
         reply = update.effective_message.reply_text('Заїбали зі своїми таймерами')
-        await send_and_archive(reply)
+        await reply(reply)
         return
 
     chat_id = update.effective_message.chat_id
@@ -86,7 +86,7 @@ async def timer(update, context):
     context.job_queue.run_once(pidors_reminder_callback, 60 * (amount - 1), chat_id=chat_id)
     context.job_queue.run_once(pidors_callback, 60 * amount, chat_id=chat_id)
     reply = update.effective_message.reply_text('Bomb has been planted')
-    await send_and_archive(reply)
+    await reply(reply)
 
 
 handlers = [CommandHandler('timer', timer)]
