@@ -1,6 +1,6 @@
 from . import db
 
 
-async def reply(reply):
-    message = await reply
+async def reply(response):
+    message = await response
     await db.client.archive(message)
