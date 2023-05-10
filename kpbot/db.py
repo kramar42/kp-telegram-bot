@@ -46,20 +46,36 @@ client = DatabaseClient()
 
 
 def select_keys(dictionary, keys):
+    """
+    If `keys` is a sequence, return new dict with specified keys only.
+    If `keys` is a dict, recursively apply selection for each key in `keys`, no
+    top-level keys in `dictionary` are removed.
+    """
     if isinstance(keys, dict):
-        return {k: select_keys(dictionary[k], keys[k]) for k in keys if k in dictionary}
-    elif isinstance(keys, tuple):
-        return {k: dictionary[k] for k in keys if k in dictionary}
+        return {k: (select_keys(dictionary[k], keys[k]) if k in keys else dictionary[k])
+                    for k in dictionary}
     else:
-        return dictionary
+        return {k: dictionary[k] for k in keys if k in dictionary}
 
 
-def cleanup_message(msg):
-    # take only last photo
+def cleanup_message(msg: dict):
+    fields_to_remove = (
+        "channel_chat_created",
+        "chat",
+        "delete_chat_photo",
+        "entities",
+        "group_chat_created",
+        "supergroup_chat_created",
+    )
+
+    # select fields to save to db
+    msg = select_keys(msg, set(msg.keys()) - set(fields_to_remove))
+
+    # process only last photo
     if "photo" in msg:
         msg["photo"] = msg["photo"][-1]
 
-    # select fields to save to db
+    # select nested fields
     msg = select_keys(msg, {
         "animation": ("file_id", "file_unique_id", "set_name"),
         "document": ("file_id", "file_unique_id", "set_name"),
