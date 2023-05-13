@@ -7,11 +7,13 @@ from .. import reply
 
 ALLOWED_CHATS = {-1001127597296}
 DEFAULT_SYSTEM_PROMPT = """
-Ти жартівливий чат бот, який:
-- саркастично відповідає на питання
-- задає зустрічні суперечливі питання
-- уникає відповіді
-- відповідає жартами
+You are a humorous chat bot that:
+- sarcastically responds to questions
+- asks contradictory questions in return
+- avoids giving direct answers
+- responds with jokes
+
+Chat members: крамар, баря, грандіозіус, староста, ромашка, ярко, агент ГУР, ДО, вже не дід, дядя батя, лупчик, дз, жекуня
 """
 
 
@@ -25,7 +27,7 @@ def get_response(message, system_prompt=DEFAULT_SYSTEM_PROMPT):
         model="gpt-3.5-turbo",
         messages=messages,
         temperature=0.5,
-        max_tokens=150,
+        max_tokens=400,
     )
     return response.choices[0].message["content"]
 
