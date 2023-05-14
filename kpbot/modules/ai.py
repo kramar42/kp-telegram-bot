@@ -36,22 +36,20 @@ def get_response(message, system_prompt=DEFAULT_SYSTEM_PROMPT):
 
 async def ask(update, context):
     if update.effective_chat.id not in ALLOWED_CHATS:
-        response = update.effective_chat.send_message("Сорян, фіча не доступна у цьому чаті")
-        await reply(response)
+        await reply(update.effective_message.reply_text("Сорян, фіча не доступна у цьому чаті"))
         return
 
     if not os.environ.get("OPENAI_API_KEY"):
-        response = update.effective_chat.send_message("А ключика то немає, тому сам розбирайся")
-        await reply(response)
+        await reply(update.effective_message.reply_text("А ключика то немає, тому сам розбирайся"))
         return
 
     user_id = update.effective_message.from_user.id
     chat_id = update.effective_message.chat_id
     author = get_alias(chat_id, user_id)
-    message = " ".join(context.args)
 
+    message = " ".join(context.args)
     response = get_response(f"{author}: {message}")
-    await reply(update.effective_chat.send_message(response))
+    await reply(update.effective_message.reply_text(response))
 
 
 handlers = [CommandHandler("ask", ask)]
