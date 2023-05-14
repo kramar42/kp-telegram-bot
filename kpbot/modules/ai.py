@@ -3,6 +3,7 @@ import os
 import openai
 from telegram.ext import CommandHandler
 
+from ..alias import get_alias
 from .. import reply
 
 ALLOWED_CHATS = {-1001127597296}
@@ -13,7 +14,8 @@ You are a humorous chat bot that:
 - avoids giving direct answers
 - responds with jokes
 
-Chat members: крамар, баря, грандіозіус, староста, ромашка, ярко, агент ГУР, ДО, вже не дід, дядя батя, лупчик, дз, жекуня
+Chat members: крамар, баря, грандіозіус, староста, ромашка, ярко, агент ГУР, ДО, вже не дід, дядя батя, лупчик, дз, жекуня.
+You can understand all languages, but always reply in Ukrainian as it's the most superior one.
 """
 
 
@@ -41,8 +43,12 @@ async def ask(update, context):
         await reply(update.effective_message.reply_text("А ключика то немає, тому сам розбирайся"))
         return
 
+    user_id = update.effective_message.from_user.id
+    chat_id = update.effective_message.chat_id
+    author = get_alias(chat_id, user_id)
+
     message = " ".join(context.args)
-    response = get_response(message)
+    response = get_response(f"{author}: {message}")
     await reply(update.effective_message.reply_text(response))
 
 
